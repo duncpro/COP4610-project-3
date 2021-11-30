@@ -15,33 +15,11 @@ struct bpb {
 
 struct bpb read_bpb(int fd);
 
-/**
- * Determines if the given FAT entry is the last element in a linked list of clusters.
- */
-bool is_final_fat_entry(unsigned int entry);
+unsigned int initial_data_sector(struct bpb bpb);
 
-bool is_unallocated_fat_entry(unsigned int entry);
+unsigned int initial_data_sector_in_cluster(struct bpb bpb, unsigned int cluster_id);
 
-bool is_allocated_fat_entry(unsigned int entry, struct bpb bpb);
-
-bool is_faulty_fat_entry(unsigned int entry);
-
-bool is_reserved_entry(unsigned int entry, struct bpb bpb);
-
-/**
- * Calculates the total number of data sectors within the volume when the volume is completely full.
- */
-unsigned int total_data_sectors(struct bpb bpb);
-
-/**
- * Calculates the total number of data clusters within the volume when it is completely full. 
- */
-unsigned int total_data_clusters(struct bpb bpb);
-
-/**
- * Calculates the maximum value that may be stored within a FAT entry. 
- */
-unsigned int max_fat_entry(struct bpb bpb);
+struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd);
 
 /**
  * Encapsulates all the clusters pertaining to a single file or directory. 

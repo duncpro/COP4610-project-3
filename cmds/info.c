@@ -12,12 +12,4 @@ void info_cmd(struct command_context context) {
     printf("total sectors: %i\n", bpb.total_sectors);
     printf("FAT size: %i sectors\n", bpb.fat_size);
     printf("root cluster id: %i\n", bpb.root_cluster_id);
-
-    if (context.tool_context->verbose) {
-        printf("=== FAT32 DERIVED IMAGE INFO ===\n");
-        printf("root directory length (in clusters): %i\n", entry_chain_length(bpb,
-            bpb.root_cluster_id, context.tool_context->image_fd));
-        printf("maximum total data clusters: %i\n", total_data_clusters(bpb));
-        printf("maximum FAT entry: %i\n", max_fat_entry(bpb));   
-    }
 }
