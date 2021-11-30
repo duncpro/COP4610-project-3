@@ -45,3 +45,7 @@ struct bpb read_bpb(int fd) {
     };
     return bpb;
 }
+
+bool is_directory(struct directory_entry entry) {
+    return ith_bit(entry.attributes, 0x10) == 1;
+}

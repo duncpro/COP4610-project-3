@@ -30,6 +30,7 @@ void test_ith_bit() {
     
     bool first_bit_correct = (ith_bit(byte, 0) == 0);
     bool second_bit_correct = (ith_bit(byte, 1) == 1);
+    bool third_bit_correct = (ith_bit(byte, 2) == 0);
 
     assert_true(first_bit_correct && second_bit_correct, "ith_bit");
 }
