@@ -8,7 +8,8 @@
 
 void repl(struct tool_context context) {
     int repl_status = REPL_STATUS_CONTINUE;
-    printf("FAT32 Tools Started\n");
+
+    printf("Type \"exit\" to shutdown REPL.\n");
  
     while (repl_status == REPL_STATUS_CONTINUE) {
         printf("Waiting for input... Enter a command now.\n");

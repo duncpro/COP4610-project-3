@@ -1,11 +1,16 @@
 #ifndef FSU_TOOL_CONTEXT
 #define FSU_TOOL_CONTEXT
 
+#include <stdbool.h>
+#include "fat32.h"
+
 /**
  * Global state for the FAT32 tools application.
  */
 struct tool_context {
     int image_fd;  
+    bool verbose;
+    struct bpb bpb;
 };
 
 /**
