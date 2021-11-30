@@ -83,16 +83,16 @@ struct cluster_list {
     int* cluster_ids;
 };
 
+unsigned int entry_chain_length(struct bpb bpb, unsigned int initial_entry, int image_fd);
+struct cluster_list scan_fat(struct bpb bpb, unsigned int initial_entry, int image_fd);
+void free_cluster_list(struct cluster_list cluster_list);
+
+#define FAT_MAX_FILE_NAME 8
+#define FAT_EXTENSION_LENGTH 3
+
 struct directory_entry {
-    /**
-     * Modifiers should take care to pad any unused space within the file name
-     * with trailing space. FAT file names are exactly 11 bytes long, the
-     * 12th byte in this array is reserved exclusively for a null terminator.
-     * This extraneous byte is included to make interoperability with C easier.
-     * Users should take care to not include the null terminator when commiting
-     * a file name to a FAT formatted volume.
-     */
-    char file_name[12];
+    char file_name[FAT_MAX_FILE_NAME + 1];
+    char extension[FAT_EXTENSION_LENGTH + 1];
     unsigned int file_size;
     unsigned char attributes;
     int cluster_id;
@@ -103,7 +103,11 @@ struct directory {
     struct directory_entry* entries;
 };
 
+void free_directory(struct directory directory);
+
 bool is_directory(struct directory_entry);
+
+struct directory read_directory(struct bpb bpb, unsigned int initial_cluster_id, int image_fd);
 
 // data type utilities
 
@@ -119,8 +123,4 @@ unsigned int read_unisgned_int(int fd, unsigned int field, unsigned int field_le
 unsigned int little_endian_unsigned_int(unsigned char* bytes, unsigned int bytes_length);
 
 int ith_bit(unsigned char byte, unsigned int i);
-
-unsigned int entry_chain_length(struct bpb bpb, unsigned int initial_entry, int image_fd);
-struct cluster_list scan_fat(struct bpb bpb, unsigned int initial_entry, int image_fd);
-void free_cluster_list(struct cluster_list cluster_list);
 #endif

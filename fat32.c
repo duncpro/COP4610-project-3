@@ -1,8 +1,10 @@
 #include "fat32.h"
+#include "string_utils.h"
 #include <math.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 int ith_bit(unsigned char byte, unsigned int i) {
     return (byte >> i) & 1;
@@ -62,9 +64,13 @@ unsigned int fat_entry_sector_position(struct bpb bpb, unsigned int data_cluster
     return bpb.total_reserved_sectors + (fat_entry_offset(data_cluster_id) / bpb.bytes_per_sector);
 }
 
+unsigned int intra_sector_offset(struct bpb bpb, unsigned int data_cluster_id) {
+    return fat_entry_offset(data_cluster_id) % bpb.bytes_per_sector;
+}
+
 unsigned long fat_entry_byte_position(struct bpb bpb, unsigned int data_cluster_id) {
-    int intra_sector_offset = fat_entry_offset(data_cluster_id) % bpb.bytes_per_sector;
-    return (fat_entry_sector_position(bpb, data_cluster_id) * bpb.bytes_per_sector) + intra_sector_offset;
+    return (fat_entry_sector_position(bpb, data_cluster_id) * bpb.bytes_per_sector) 
+        + intra_sector_offset(bpb, data_cluster_id);
 }
 
 bool is_final_fat_entry(unsigned int entry) {
@@ -105,14 +111,12 @@ unsigned int next_fat_entry(struct bpb bpb, unsigned int current_entry, int imag
 }
  
 unsigned int entry_chain_length(struct bpb bpb, unsigned int initial_entry, int image_fd) {
-    if (is_unallocated_fat_entry(initial_entry) || is_faulty_fat_entry(initial_entry) || is_reserved_entry(initial_entry, bpb)) {
+    if (is_unallocated_fat_entry(initial_entry) || is_faulty_fat_entry(initial_entry) || is_reserved_entry(initial_entry, bpb) || is_final_fat_entry(initial_entry)) {
         return 0;
     }
 
-    if (is_final_fat_entry(initial_entry)) return 1;
-
     unsigned int entry = initial_entry;
-    int count = 1;
+    int count = 0;
     while (is_allocated_fat_entry(entry, bpb)) {
         count++;
         entry = next_fat_entry(bpb, entry, image_fd);
@@ -146,12 +150,70 @@ void free_cluster_list(struct cluster_list cluster_list) {
     free(cluster_list.cluster_ids);
 }
 
+void free_directory(struct directory directory) {
+    free(directory.entries);
+}
+
+void read_bytes(char* bytes, int field, int length, int image_fd) {
+    for (int i = 0; i < length; i++) {
+        int byte = read_unisgned_int(image_fd, field + i, 1);
+        bytes[i] = byte;
+    }
+}
+
+void read_dir_entry_name(unsigned long dir_start_byte_position, struct directory_entry* entry, int image_fd) {
+    char raw[FAT_MAX_FILE_NAME + 1];
+    raw[FAT_MAX_FILE_NAME] = '\0';
+    read_bytes(raw, dir_start_byte_position, FAT_MAX_FILE_NAME, image_fd);
+    memcpy(&(entry->file_name), trim_leading(raw), FAT_MAX_FILE_NAME);
+}
+
+bool is_free_directory(int image_fd, int directory_start_byte_position) {
+    unsigned int value = read_unisgned_int(image_fd, directory_start_byte_position, 4);
+    return value == 0x00 || value == 0xE5;
+} 
+
+struct directory read_directory_segment(struct bpb bpb, unsigned int cluster_id, int image_fd) {
+    char file_name[FAT_MAX_FILE_NAME + FAT_EXTENSION_LENGTH];
+    struct directory_entry* entries = malloc(sizeof(struct directory_entry) * 0);
+    int total_entries = 0;
+    
+    while (!is_free_directory(image_fd, (cluster_id * bpb.sectors_per_cluster * bpb.bytes_per_sector ) + (total_entries * 32))) {
+        entries = realloc(entries, sizeof(struct directory_entry) * (total_entries + 1));
+        unsigned long directory_start_position = (cluster_id * bpb.sectors_per_cluster * bpb.bytes_per_sector ) + (total_entries * 32);
+        read_dir_entry_name(directory_start_position, &(entries[total_entries]), image_fd);
+        total_entries++;
+    }
+    
+    struct directory segment = {
+        .total_entries = total_entries,
+        .entries = entries
+    };
+    return segment;
+}
+
+
 struct directory read_directory(struct bpb bpb, unsigned int initial_cluster_id, int image_fd) {
     struct cluster_list cluster_list = scan_fat(bpb, initial_cluster_id, image_fd);
 
+    printf("Total clusters in directory: %i\n", cluster_list.total_clusters);
+
+    struct directory full_directory = {
+        .total_entries = 0,
+        .entries = malloc(sizeof(struct directory_entry) * 0)
+    };
+
+    for (int i = 0; i < cluster_list.total_clusters; i++) {
+        unsigned int cluster_id = cluster_list.cluster_ids[i];
+        struct directory segment = read_directory_segment(bpb, cluster_id, image_fd);
+        for (int k = 0; k < segment.total_entries; k++) {
+            full_directory.entries = realloc(full_directory.entries, sizeof(struct directory_entry) * (full_directory.total_entries + 1));
+            full_directory.entries[full_directory.total_entries] = segment.entries[k];
+            full_directory.total_entries++;
+        }
+        free_directory(segment);
+    }
+
     free_cluster_list(cluster_list);
-}
-
-struct directory read_directory_segment(struct bpb bpb, unsigned int cluster_id) {
-
+    return full_directory;
 }
