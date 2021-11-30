@@ -16,32 +16,6 @@ struct bpb {
 struct bpb read_bpb(int fd);
 
 /**
- * Calculates the position of the first byte of the given sector.
- * The position is the distance in bytes, from the start of the volume,
- * to the first byte in the given sector.
- */
-unsigned long byte_position(struct bpb bpb, unsigned int sector_id);
-
-/** 
- * The position of the first byte of the desired fat entry assuming that the initial
- *  entry is at position 0.
- */ 
-unsigned int fat_entry_offset(unsigned int data_cluster_id);
-
-/**
- * Calculates the sector id of the sector containing the FAT entry for the given data cluster.
- */
-unsigned int fat_entry_sector_position(struct bpb bpb, unsigned int data_cluster_id);
-
-/**
- * Calculates the position of the fat entry (measured in bytes from the beginning of the volume)
- * for the given data cluster.
- */
-unsigned long fat_entry_byte_position(struct bpb bpb, unsigned int data_cluster_id);
-
-unsigned int next_fat_entry(struct bpb bpb, unsigned int current_entry, int image_fd);
-
-/**
  * Determines if the given FAT entry is the last element in a linked list of clusters.
  */
 bool is_final_fat_entry(unsigned int entry);
@@ -106,13 +80,6 @@ struct directory {
 void free_directory(struct directory directory);
 
 bool is_directory(struct directory_entry);
-
-struct directory read_directory(struct bpb bpb, unsigned int initial_cluster_id, int image_fd);
-
-// data type utilities
-
-unsigned int read_unisgned_int(int fd, unsigned int field, unsigned int field_length);
-
 
 // low-level utilities
 
