@@ -58,14 +58,13 @@ unsigned int fat_entry_offset(unsigned int data_cluster_id) {
     return 4 /* bytes */ * data_cluster_id;
 }
 
-unsigned int fat_entry_sector_position(struct bpb bpb, unsigned int fat_id, unsigned int data_cluster_id) {
-    int fat_offset = fat_id * bpb.fat_size;
-    return bpb.total_reserved_sectors + (fat_offset + (fat_entry_offset(data_cluster_id) / bpb.bytes_per_sector));
+unsigned int fat_entry_sector_position(struct bpb bpb, unsigned int data_cluster_id) {
+    return bpb.total_reserved_sectors + (fat_entry_offset(data_cluster_id) / bpb.bytes_per_sector);
 }
 
-long fat_entry_byte_position(struct bpb bpb, unsigned int fat_id, unsigned int data_cluster_id) {
+unsigned long fat_entry_byte_position(struct bpb bpb, unsigned int data_cluster_id) {
     int intra_sector_offset = fat_entry_offset(data_cluster_id) % bpb.bytes_per_sector;
-    return (fat_entry_sector_position(bpb, data_cluster_id, fat_id) * bpb.bytes_per_sector) + intra_sector_offset;
+    return (fat_entry_sector_position(bpb, data_cluster_id) * bpb.bytes_per_sector) + intra_sector_offset;
 }
 
 bool is_final_fat_entry(unsigned int entry) {
@@ -99,19 +98,28 @@ unsigned int max_fat_entry(struct bpb bpb) {
 bool is_reserved_entry(unsigned int entry, struct bpb bpb) {
     return entry > max_fat_entry(bpb);
 }
+
+unsigned int next_fat_entry(struct bpb bpb, unsigned int current_entry, int image_fd) {
+    unsigned int position = fat_entry_byte_position(bpb, current_entry);
+    return read_unisgned_int(image_fd, position, 4);
+}
  
-// int entry_chain_length(struct bpb bpb, int initial_entry) {
-//     if (is_unallocated_fat_entry(initial_entry) || is_faulty_fat_entry(initial_entry)) {
-//         return 0;
-//     }
+unsigned int entry_chain_length(struct bpb bpb, unsigned int initial_entry, int image_fd) {
+    if (is_unallocated_fat_entry(initial_entry) || is_faulty_fat_entry(initial_entry) || is_reserved_entry(initial_entry, bpb)) {
+        return 0;
+    }
 
-//     if (is_final_fat_entry(initial_entry)) {
-//         return 0;
-//     }
+    if (is_final_fat_entry(initial_entry)) return 1;
 
-//     int entry = initial_entry;
-//     while ()
-// }
+    int entry = initial_entry;
+    int count = 1;
+    while (is_allocated_fat_entry(entry, bpb)) {
+        count++;
+        entry = next_fat_entry(bpb, entry, image_fd);
+    }
+
+    return count;
+}
 
 // struct cluster_list scan_fat(struct bpb bpb, int initial_entry) {
 //     struct cluster_list cluster_list;
@@ -126,10 +134,10 @@ bool is_reserved_entry(unsigned int entry, struct bpb bpb) {
 //     cluster_list.
 // }
 
-struct directory read_directory(struct bpb bpb, unsigned int initial_cluster_id) {
+// struct directory read_directory(struct bpb bpb, unsigned int initial_cluster_id) {
      
-}
+// }
 
-struct directory read_directory_segment(struct bpb bpb, unsigned int cluster_id) {
+// struct directory read_directory_segment(struct bpb bpb, unsigned int cluster_id) {
 
-}
+// }

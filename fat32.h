@@ -30,18 +30,16 @@ unsigned int fat_entry_offset(unsigned int data_cluster_id);
 
 /**
  * Calculates the sector id of the sector containing the FAT entry for the given data cluster.
- * Since a FAT32 volume can have any number of FATs, this function accepts a fat_id parameter.
- * For an argument of 0, this function returns the entry within the first FAT of the volume.
- * For an argument of 1, this function returns the entry within the second FAT of the volume,
- * so on and so forth.
  */
-unsigned int fat_entry_sector_position(struct bpb bpb, unsigned int fat_id, unsigned int data_cluster_id);
+unsigned int fat_entry_sector_position(struct bpb bpb, unsigned int data_cluster_id);
 
 /**
  * Calculates the position of the fat entry (measured in bytes from the beginning of the volume)
  * for the given data cluster.
  */
-long fat_entry_byte_position(struct bpb bpb, unsigned int fat_id, unsigned int data_cluster_id);
+unsigned long fat_entry_byte_position(struct bpb bpb, unsigned int data_cluster_id);
+
+unsigned int next_fat_entry(struct bpb bpb, unsigned int current_entry, int image_fd);
 
 /**
  * Determines if the given FAT entry is the last element in a linked list of clusters.
