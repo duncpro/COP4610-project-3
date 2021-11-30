@@ -25,9 +25,19 @@ void test_read_bpb() {
     close(image_fd);
 }
 
+void test_ith_bit() {
+    unsigned char byte = 2;
+    
+    bool first_bit_correct = (ith_bit(byte, 0) == 0);
+    bool second_bit_correct = (ith_bit(byte, 1) == 1);
+
+    assert_true(first_bit_correct && second_bit_correct, "ith_bit");
+}
+
 int main() {
     test_little_endian_int_general_case();
     test_little_endian_int_single_case();
     test_read_bpb();
+    test_ith_bit();
     return 0;
 }

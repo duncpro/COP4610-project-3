@@ -1,4 +1,4 @@
-#include "./../repl.c"
+#include "./../command.c"
 #include "./../string_utils.c"
 #include "test_tools.c"
 

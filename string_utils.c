@@ -1,4 +1,5 @@
 #include <string.h>
+#include "string_utils.h"
 
 char* trim_leading(char* str) {
     int total_spaces = 0;
