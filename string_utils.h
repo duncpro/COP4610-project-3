@@ -17,4 +17,6 @@ void trim_trailing(char* str);
  */ 
 char* trim(char* str);
 
+int count(char c, char* in);
+
 #endif

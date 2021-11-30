@@ -60,6 +60,20 @@ void smoke_test_trim() {
     assert_str_equals(expected, trim(mutable_str), "trim (smoke)");
 }
 
+void test_count_empty() {
+    char* str = "";
+    int expected = 0;
+    int actual = count(' ', str);
+    assert_int_equals(expected, actual, "count (empty)");
+}
+
+void test_count_general() {
+    char* str = " ";
+    int expected = 1;
+    int actual = count(' ', str);
+    assert_int_equals(expected, actual, "count (general)");
+}
+
 int main() {
     test_trim_leading_noop();
     test_trim_leading_single();
@@ -68,5 +82,7 @@ int main() {
     test_trim_trailing_single();
     test_trim_trailing_general();
     smoke_test_trim();
+    test_count_empty();
+    test_count_general();
     return 0;
 }

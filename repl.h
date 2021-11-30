@@ -1,12 +1,15 @@
 #ifndef FSU_REPL
 #define FSU_REPL
 
+#include <stdbool.h>
+
 bool run_repl;
 
 struct command {
     char** words;
     int total_words;
-}
+    char* raw;
+};
 
 /**
  * Returns the action associated with the given command.
@@ -16,6 +19,17 @@ char* action(struct command* cmd);
 
 void dispatch(struct command* cmd);
 
+/**
+ * Parses the given string into a command.
+ * The returned command struct contains dynamically allocated memory which must be freed 
+ * at the end of the object's lifecycle, use free_command() to satisfy this constraint.
+ */ 
 struct command parse_command(char* str);
 
+/**
+ * Frees the dynamically allocated memory stored within the given command struct.
+ * This function does not free the command struct itself, so, if it was dynamically allocated,
+ * the caller is responsible for freeing that struct as well.
+ */
+void free_command(struct command* command);
 #endif

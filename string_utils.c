@@ -22,3 +22,11 @@ char* trim(char* str) {
     trim_trailing(str);
     return trim_leading(str);
 }
+
+int count(char c, char* in) {
+    int count = 0;
+    for (int i = 0; i < strlen(in); i++) {
+        if (in[i] == ' ') count++;
+    }
+    return count;
+}
