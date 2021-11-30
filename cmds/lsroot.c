@@ -8,5 +8,5 @@ void lsroot_cmd(struct command_context context) {
     for (int i = 0; i < dir.total_entries; i++) {
 
     }
-    // free_directory(dir);
+    free_directory(dir);
 }

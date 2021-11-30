@@ -104,3 +104,7 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
 
     return dir;
 }
+
+void free_directory(struct directory dir) {
+    free(dir.entries);
+}
