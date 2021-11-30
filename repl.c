@@ -15,7 +15,7 @@ void repl(struct tool_context context) {
         size_t line_buffer_size;
         int line_length = getline(&line_buffer, &line_buffer_size, stdin);
         remove_all('\n', line_buffer);
-        dispatch(parse_command(trim(line_buffer)), context);
+        dispatch(parse_command(trim(line_buffer)), &context);
         free(line_buffer);
     }
 
@@ -72,7 +72,7 @@ void free_command(struct command command) {
 // include command modules
 #include "cmds/info.c"
 
-void dispatch(struct command cmd, struct tool_context tool_context) {
+void dispatch(struct command cmd, struct tool_context* tool_context) {
     if (action(cmd) == NULL) return;
 
     struct command_context context = {

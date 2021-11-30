@@ -25,7 +25,7 @@ char* action(struct command cmd);
  */
 char** args(struct command cmd);
 
-void dispatch(struct command cmd, struct tool_context context);
+void dispatch(struct command cmd, struct tool_context* context);
 
 /**
  * Parses the given string into a command.

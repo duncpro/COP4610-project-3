@@ -5,7 +5,7 @@ struct tool_context {
 };
 
 struct command_context {
-    struct tool_context tool_context;
+    struct tool_context* tool_context;
     int arg_count;
     char** args;
 };
