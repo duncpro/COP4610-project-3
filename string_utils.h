@@ -19,4 +19,6 @@ char* trim(char* str);
 
 int count(char c, char* in);
 
+void remove_all(char c, char* in);
+
 #endif

@@ -25,3 +25,9 @@ void assert_str_equals(char* expected, char* actual, char* test_name) {
         printf("Actual: %s\n", actual);
     }
 }
+
+char* mutable_str(char* string_literal) {
+    char* new_str = malloc(sizeof(char) * (strlen(string_literal) + 1));
+    strcpy(new_str, string_literal);
+    return new_str;
+}

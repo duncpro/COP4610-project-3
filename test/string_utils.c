@@ -21,43 +21,46 @@ void test_trim_leading_general() {
 }
 
 void test_trim_trailing_noop() {
-    char* str = "hello gwen";
-    char* mutable_str = malloc(sizeof(char) * (strlen(str) + 1));
-    strcpy(mutable_str, str);
-    trim_trailing(mutable_str);
-    assert_str_equals(mutable_str, mutable_str, "trim trailing (noop)");
+    char* str = mutable_str("hello gwen");
+    trim_trailing(str);
+    assert_str_equals(str, str, "trim trailing (noop)");
+    free(str);
 }
 
 void test_trim_trailing_single() {
-    char* str = "hello gwen ";
+    char* str = mutable_str("hello gwen ");
     char* expected = "hello gwen";
 
-    char* mutable_str = malloc(sizeof(char) * (strlen(str) + 1));
-    strcpy(mutable_str, str);
-    trim_trailing(mutable_str);
+    trim_trailing(str);
 
-    assert_str_equals(expected, mutable_str, "trim trailing (single)");
+    assert_str_equals(expected, str, "trim trailing (single)");
+    free(str);
 }
 
 void test_trim_trailing_general() {
-    char* str = "hello gwen  ";
+    char* str = mutable_str("hello gwen  ");
     char* expected = "hello gwen";
 
-    char* mutable_str = malloc(sizeof(char) * (strlen(str) + 1));
-    strcpy(mutable_str, str);
-    trim_trailing(mutable_str);
+    trim_trailing(str);
 
-    assert_str_equals(expected, mutable_str, "trim trailing (general)");
+    assert_str_equals(expected, str, "trim trailing (general)");
+    free(str);
 }
 
-void smoke_test_trim() {
-    char* str = " hello gwen ";
+void test_trim_general() {
+    char* str = mutable_str(" hello gwen ");
     char* expected = "hello gwen";
-
-    char* mutable_str = malloc(sizeof(char) * (strlen(str) + 1));
-    strcpy(mutable_str, str);
     
-    assert_str_equals(expected, trim(mutable_str), "trim (smoke)");
+    assert_str_equals(expected, trim(str), "trim (general)");
+    free(str);
+}
+
+void test_trim_empty() {
+    char* str = mutable_str("");
+    char* expected = "";
+    
+    assert_str_equals(expected, trim(str), "trim (empty)");
+    free(str);
 }
 
 void test_count_empty() {
@@ -74,6 +77,20 @@ void test_count_general() {
     assert_int_equals(expected, actual, "count (general)");
 }
 
+void test_remove_all_empty() {
+    char* str = mutable_str("");
+    remove_all('a', str);
+    assert_str_equals("", str, "remove_all (empty)");
+    free(str);
+}
+
+void test_remove_all_general() {
+    char* str = mutable_str("hello world");
+    remove_all('l', str);
+    assert_str_equals("heo word", str, "remove_all (general)");
+    free(str);
+}
+
 int main() {
     test_trim_leading_noop();
     test_trim_leading_single();
@@ -81,8 +98,11 @@ int main() {
     test_trim_trailing_noop();
     test_trim_trailing_single();
     test_trim_trailing_general();
-    smoke_test_trim();
+    test_trim_general();
     test_count_empty();
     test_count_general();
+    test_remove_all_empty();
+    test_remove_all_general();
+    test_trim_empty();
     return 0;
 }

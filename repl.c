@@ -6,45 +6,46 @@
 #include <string.h>
 
 void repl() {
-    run_repl = true;
-
-    while (run_repl) {
-        char** line_buffer = NULL;
+    continue_repl = true;
+    printf("FAT32 Tools Started\n");
+ 
+    while (continue_repl) {
+        printf("Waiting for input... Enter a command now.\n");
+        char* line_buffer = NULL;
         size_t line_buffer_size;
-        int line_length = getline(line_buffer, &line_buffer_size, stdin);
+        int line_length = getline(&line_buffer, &line_buffer_size, stdin);
+        remove_all('\n', line_buffer);
+        dispatch(parse_command(trim(line_buffer)));
         free(line_buffer);
     }
 
 }
 
-char* action(struct command* cmd) {
-    return cmd->words[0];
+char* action(struct command cmd) {
+    if (cmd.total_words == 0) return NULL;
+    return cmd.words[0];
 }
 
-struct command parse_command(char* potentially_immutable_str) {
+struct command parse_command(char* str) {
     struct command cmd;
 
-    char* mutable_str = malloc(sizeof(char) * (strlen(potentially_immutable_str) + 1));
-    strcpy(mutable_str, potentially_immutable_str);
-    cmd.raw = mutable_str;
-    
-    char* trimmed_str = trim(mutable_str);
+    cmd.raw = malloc(sizeof(char) * (strlen(str) + 1));
+    strcpy(cmd.raw, str);
 
-    if (strlen(trimmed_str) == 0) {
+    if (strlen(cmd.raw) == 0) {
         cmd.total_words = 0;
         cmd.words = NULL;
         return cmd;
     }
 
-    cmd.total_words = 1 + count(' ', trimmed_str);
+    cmd.total_words = 1 + count(' ', cmd.raw);
 
     // Make room for null terminators inserted by strtok.
-    mutable_str = realloc(mutable_str, sizeof(char) * (strlen(mutable_str) + (1 + (cmd.total_words - 1))));
-    cmd.raw = mutable_str;
+    cmd.raw = realloc(cmd.raw, sizeof(char) * (strlen(cmd.raw) + (1 + (cmd.total_words - 1))));
 
     cmd.words = malloc(sizeof(char*) * cmd.total_words);
 
-    char* word = strtok(trimmed_str, " ");
+    char* word = strtok(cmd.raw, " ");
     cmd.words[0] = word;
 
     int i = 1;
@@ -57,7 +58,12 @@ struct command parse_command(char* potentially_immutable_str) {
     return cmd;
 }
 
-void free_command(struct command* command) {
-    free(command->raw);
-    free(command->words);
+void free_command(struct command command) {
+    free(command.raw);
+    free(command.words);
+}
+
+void dispatch(struct command cmd) {
+    if (action(cmd) == NULL) return;
+    if (strcmp(action(cmd), "exit") == 0) continue_repl = false;
 }

@@ -30,3 +30,16 @@ int count(char c, char* in) {
     }
     return count;
 }
+
+void remove_all(char c, char* in) {
+    char new[strlen(in) + 1 - count(c, in)];
+    int new_length = 0;
+    strcpy(new, in);
+    for (int i = 0; i < strlen(in); i++) {
+        if (in[i] == c) continue;
+        new[new_length] = in[i];
+        new_length++;
+    }
+    new[new_length] = '\0';
+    strcpy(in, new);
+}
