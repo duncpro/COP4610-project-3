@@ -57,7 +57,7 @@ unsigned int initial_data_sector(struct bpb bpb) {
 }
 
 unsigned int initial_data_sector_in_cluster(struct bpb bpb, unsigned int cluster_id) {
-    return ((cluster_id - 2) * bpb.sectors_per_cluster) + initial_data_sector(bpb);
+    return ((cluster_id - bpb.root_cluster_id) * bpb.sectors_per_cluster) + initial_data_sector(bpb);
 }
 
 unsigned int next_cluster_id(unsigned int current_cluster_id, int image_fd, struct bpb bpb) {
