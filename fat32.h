@@ -18,9 +18,6 @@ struct bpb read_bpb(int fd);
 unsigned int initial_data_sector(struct bpb bpb);
 
 unsigned int initial_data_sector_in_cluster(struct bpb bpb, unsigned int cluster_id);
-
-struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd);
-
 /**
  * Encapsulates all the clusters pertaining to a single file or directory. 
  */
@@ -50,14 +47,17 @@ struct directory_entry {
     int cluster_id;
 };
 
+bool is_directory(struct directory_entry);
+
 struct directory {
     int total_entries;
     struct directory_entry* entries;
 };
 
-void free_directory(struct directory directory);
 
-bool is_directory(struct directory_entry);
+struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd);
+
+void free_directory(struct directory directory);
 
 // low-level utilities
 
