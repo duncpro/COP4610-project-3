@@ -11,5 +11,5 @@ void info_cmd(struct command_context context) {
     printf("total FATs: %i\n", bpb.total_fats);
     printf("total sectors: %i\n", bpb.total_sectors);
     printf("FAT size: %i sectors\n", bpb.fat_size);
-    printf("root cluster position: %i\n", bpb.root_cluster_position);
+    printf("root cluster id: %i\n", bpb.root_cluster_id);
 }
