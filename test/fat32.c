@@ -7,14 +7,14 @@ void test_little_endian_int_general_case() {
     unsigned char bytes[] = {0x01, 0x01};
     int expected = 257;
     int actual = little_endian_int(bytes, 2);
-    assertEquals(expected, actual, "little_endian_int (general)");
+    assert_int_equals(expected, actual, "little_endian_int (general)");
 }
 
 void test_little_endian_int_single_case() {
     unsigned char bytes[] = {0x01};
     int expected = 1;
     int actual = little_endian_int(bytes, 1);
-    assertEquals(expected, actual, "little_endian_int (single byte)");
+    assert_int_equals(expected, actual, "little_endian_int (single byte)");
 }
 
 void test_read_bpb() {

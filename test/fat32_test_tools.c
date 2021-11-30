@@ -17,7 +17,7 @@ void assert_real_sectors_per_cluster_val(int actual, char* test_name) {
         is_real = false;
         break;
     }
-    assertTrue(is_real, test_name);
+    assert_true(is_real, test_name);
 }
 
 void assert_real_bytes_per_sector_val(int actual, char* test_name) {
@@ -33,5 +33,5 @@ void assert_real_bytes_per_sector_val(int actual, char* test_name) {
         is_real = false;
         break;
     }
-    assertTrue(is_real, test_name);
+    assert_true(is_real, test_name);
 }
