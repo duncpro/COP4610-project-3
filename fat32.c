@@ -22,7 +22,7 @@ int little_endian_int(unsigned char* bytes, int bytes_length) {
     return sum;
 }
 
-int read_bpb_field_int(int fd, int field, int field_length) {
+int read_int(int fd, int field, int field_length) {
     unsigned char buffer[field_length];
     int total_read = pread(fd, buffer, field_length, field);
     if (total_read < field_length) {
@@ -35,9 +35,13 @@ int read_bpb_field_int(int fd, int field, int field_length) {
 
 struct bpb read_bpb(int fd) {
     struct bpb bpb = {
-        .bytes_per_sector = read_bpb_field_int(fd, 11, 2),
-        .sectors_per_cluster = read_bpb_field_int(fd, 13, 1),
-        .root_cluster_position = read_bpb_field_int(fd, 44, 4)
+        .bytes_per_sector = read_int(fd, 11, 2),
+        .sectors_per_cluster = read_int(fd, 13, 1),
+        .total_reserved_sectors = read_int(fd, 14, 2),
+        .total_fats = read_int(fd, 16, 1),
+        .total_sectors = read_int(fd, 32, 4),
+        .fat_size = read_int(fd, 36, 2),
+        .root_cluster_position = read_int(fd, 44, 4)
     };
     return bpb;
 }
