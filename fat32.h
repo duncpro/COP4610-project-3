@@ -20,13 +20,13 @@ struct bpb read_bpb(int fd);
  * The position is the distance in bytes, from the start of the volume,
  * to the first byte in the given sector.
  */
-long byte_position(struct bpb bpb, int sector_id);
+unsigned long byte_position(struct bpb bpb, unsigned int sector_id);
 
 /** 
  * The position of the first byte of the desired fat entry assuming that the initial
  *  entry is at position 0.
  */ 
-int fat_entry_offset(int data_cluster_id);
+unsigned int fat_entry_offset(unsigned int data_cluster_id);
 
 /**
  * Calculates the sector id of the sector containing the FAT entry for the given data cluster.
@@ -35,13 +35,55 @@ int fat_entry_offset(int data_cluster_id);
  * For an argument of 1, this function returns the entry within the second FAT of the volume,
  * so on and so forth.
  */
-int fat_entry_sector_position(struct bpb bpb, int fat_id, int data_cluster_id);
+unsigned int fat_entry_sector_position(struct bpb bpb, unsigned int fat_id, unsigned int data_cluster_id);
 
 /**
  * Calculates the position of the fat entry (measured in bytes from the beginning of the volume)
  * for the given data cluster.
  */
-long fat_entry_byte_position(struct bpb bpb, int fat_id, int data_cluster_id);
+long fat_entry_byte_position(struct bpb bpb, unsigned int fat_id, unsigned int data_cluster_id);
+
+/**
+ * Determines if the given FAT entry is the last element in a linked list of clusters.
+ */
+bool is_final_fat_entry(unsigned int entry);
+
+bool is_unallocated_fat_entry(unsigned int entry);
+
+bool is_allocated_fat_entry(unsigned int entry, struct bpb bpb);
+
+bool is_faulty_fat_entry(unsigned int entry);
+
+bool is_reserved_entry(unsigned int entry, struct bpb bpb);
+
+/**
+ * Calculates the total number of data sectors within the volume when the volume is completely full.
+ */
+unsigned int total_data_sectors(struct bpb bpb);
+
+/**
+ * Calculates the total number of data clusters within the volume when it is completely full. 
+ */
+unsigned int total_data_clusters(struct bpb bpb);
+
+/**
+ * Calculates the maximum value that may be stored within a FAT entry. 
+ */
+unsigned int max_fat_entry(struct bpb bpb);
+
+/**
+ * Encapsulates all the clusters pertaining to a single file or directory. 
+ */
+struct cluster_list {
+    int total_clusters;
+
+    /**
+     * The ids of all clusters associated with the file which this cluster_list represents.
+     * This array is ordered logically. In other words, reading the contents of all the clusters in the order
+     * in which they appear within the array should result in an uncurropted, fully-intact file or directory. 
+     */
+    int* cluster_ids;
+};
 
 struct directory_entry {
     /**
@@ -53,16 +95,21 @@ struct directory_entry {
      * a file name to a FAT formatted volume.
      */
     char file_name[12];
-    int file_size;
+    unsigned int file_size;
     unsigned char attributes;
     int cluster_id;
+};
+
+struct directory {
+    int total_entries;
+    struct directory_entry* entries;
 };
 
 bool is_directory(struct directory_entry);
 
 // data type utilities
 
-int read_int(int fd, int field, int field_length);
+unsigned int read_unisgned_int(int fd, unsigned int field, unsigned int field_length);
 
 
 // low-level utilities
@@ -71,7 +118,7 @@ int read_int(int fd, int field, int field_length);
  * Assembles a C Language integer given a little-endian byte representation
  * of an integer.
  */ 
-int little_endian_int(unsigned char* bytes, int bytes_length);
+unsigned int little_endian_unsigned_int(unsigned char* bytes, unsigned int bytes_length);
 
-int ith_bit(unsigned char byte, int i);
+int ith_bit(unsigned char byte, unsigned int i);
 #endif
