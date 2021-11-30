@@ -111,7 +111,7 @@ unsigned int entry_chain_length(struct bpb bpb, unsigned int initial_entry, int 
 
     if (is_final_fat_entry(initial_entry)) return 1;
 
-    int entry = initial_entry;
+    unsigned int entry = initial_entry;
     int count = 1;
     while (is_allocated_fat_entry(entry, bpb)) {
         count++;
@@ -121,23 +121,37 @@ unsigned int entry_chain_length(struct bpb bpb, unsigned int initial_entry, int 
     return count;
 }
 
-// struct cluster_list scan_fat(struct bpb bpb, int initial_entry) {
-//     struct cluster_list cluster_list;
+struct cluster_list scan_fat(struct bpb bpb, unsigned int initial_entry, int image_fd) {
+    struct cluster_list cluster_list = {
+        .cluster_ids = malloc(sizeof(unsigned int) * entry_chain_length(bpb, initial_entry, image_fd)),
+        .total_clusters = entry_chain_length(bpb, initial_entry, image_fd)
+    };
 
-//     if (is_unallocated_fat_entry(initial_entry) || is_faulty_fat_entry(initial_entry)) {
-//         cluster_list.cluster_ids = NULL;
-//         cluster_list.total_clusters = 0;
-//         return cluster_list;
-//     }
+    if (cluster_list.total_clusters == 0) return cluster_list;
 
-//     int entry = initial_entry;
-//     cluster_list.
-// }
+    cluster_list.cluster_ids[0] = initial_entry;
+    if (cluster_list.total_clusters == 1) return cluster_list;
 
-// struct directory read_directory(struct bpb bpb, unsigned int initial_cluster_id) {
-     
-// }
+    
+    unsigned int entry = initial_entry;
+    for (int i = 1; i < cluster_list.total_clusters; i++) {
+        entry = next_fat_entry(bpb, entry, image_fd);
+        cluster_list.cluster_ids[i] = entry;
+    }
 
-// struct directory read_directory_segment(struct bpb bpb, unsigned int cluster_id) {
+    return cluster_list;
+}
 
-// }
+void free_cluster_list(struct cluster_list cluster_list) {
+    free(cluster_list.cluster_ids);
+}
+
+struct directory read_directory(struct bpb bpb, unsigned int initial_cluster_id, int image_fd) {
+    struct cluster_list cluster_list = scan_fat(bpb, initial_cluster_id, image_fd);
+
+    free_cluster_list(cluster_list);
+}
+
+struct directory read_directory_segment(struct bpb bpb, unsigned int cluster_id) {
+
+}

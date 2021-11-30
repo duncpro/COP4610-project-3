@@ -119,4 +119,8 @@ unsigned int read_unisgned_int(int fd, unsigned int field, unsigned int field_le
 unsigned int little_endian_unsigned_int(unsigned char* bytes, unsigned int bytes_length);
 
 int ith_bit(unsigned char byte, unsigned int i);
+
+unsigned int entry_chain_length(struct bpb bpb, unsigned int initial_entry, int image_fd);
+struct cluster_list scan_fat(struct bpb bpb, unsigned int initial_entry, int image_fd);
+void free_cluster_list(struct cluster_list cluster_list);
 #endif
