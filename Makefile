@@ -1,4 +1,4 @@
-build/fat32_tools.o: fat32.c repl.c string_utils.c units.c main.c
+build/fat32_tools.o: fat32.c repl.c string_utils.c units.c main.c cmds/info.c
 	mkdir -p build
 	cc -o ./build/fat32_tools.o fat32.c repl.c string_utils.c units.c main.c
 

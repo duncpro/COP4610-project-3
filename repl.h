@@ -18,7 +18,14 @@ struct command {
  */
 char* action(struct command cmd);
 
-void dispatch(struct command cmd);
+/**
+ * Returns the arguments associated with the given command.
+ * If no arguments were included in the command then a null pointer is returned instead.
+ * Arguments include all words after the action.
+ */
+char** args(struct command cmd);
+
+void dispatch(struct command cmd, struct tool_context context);
 
 /**
  * Parses the given string into a command.

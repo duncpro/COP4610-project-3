@@ -12,7 +12,7 @@ int little_endian_int(unsigned char* bytes, int bytes_length) {
     int sum = 0;
     if (bytes_length > sizeof(int)) {
         printf("The length of the integer byte array representation exceeds that which can be stored in C Langage Integer");
-        exit(1);
+        return -1;
     }
     for (int i = 0; i < sizeof(int); i++) {
         if (i >= bytes_length) break;
@@ -28,7 +28,7 @@ int read_bpb_field_int(int fd, int field, int field_length) {
     if (total_read < field_length) {
         printf("Malformed FAT 32 image.\n");
         printf("Expected the BPB to contain a required field but it did not.\n");
-        exit(1);
+        return -1;
     }
     return little_endian_int(buffer, total_read);
 }

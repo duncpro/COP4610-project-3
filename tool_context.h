@@ -3,4 +3,10 @@
 struct tool_context {
     int image_fd;  
 };
+
+struct command_context {
+    struct tool_context tool_context;
+    int arg_count;
+    char** args;
+};
 #endif

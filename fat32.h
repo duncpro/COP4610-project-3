@@ -15,4 +15,6 @@ int little_endian_int(unsigned char* bytes, int bytes_length);
 
 int read_bpb_field_int(int fd, int field, int field_length);
 
+struct bpb read_bpb(int fd);
+
 #endif
