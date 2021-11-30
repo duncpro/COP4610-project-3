@@ -20,17 +20,13 @@ struct bpb read_bpb(int fd);
  * The position is the distance in bytes, from the start of the volume,
  * to the first byte in the given sector.
  */
-long byte_position(struct bpb bpb, int sector_id) {
-    return bpb.bytes_per_sector * sector_id;
-}
+long byte_position(struct bpb bpb, int sector_id);
 
 /** 
  * The position of the first byte of the desired fat entry assuming that the initial
  *  entry is at position 0.
  */ 
-int fat_entry_offset(int data_cluster_id) {
-    return 4 /* bytes */ * data_cluster_id;
-}
+int fat_entry_offset(int data_cluster_id);
 
 /**
  * Calculates the sector id of the sector containing the FAT entry for the given data cluster.
@@ -39,22 +35,13 @@ int fat_entry_offset(int data_cluster_id) {
  * For an argument of 1, this function returns the entry within the second FAT of the volume,
  * so on and so forth.
  */
-int fat_entry_sector_position(struct bpb bpb, int fat_id, int data_cluster_id) {
-    int fat_offset = fat_id * bpb.fat_size;
-    return bpb.total_reserved_sectors + (fat_offset + (fat_entry_offset(data_cluster_id) / bpb.bytes_per_sector));
-}
+int fat_entry_sector_position(struct bpb bpb, int fat_id, int data_cluster_id);
 
 /**
  * Calculates the position of the fat entry (measured in bytes from the beginning of the volume)
  * for the given data cluster.
  */
-long fat_entry_byte_position(struct bpb bpb, int fat_id, int data_cluster_id) {
-    int intra_sector_offset = fat_entry_offset(data_cluster_id) % bpb.bytes_per_sector;
-    return (fat_entry_sector_position(bpb, data_cluster_id, fat_id) * bpb.bytes_per_sector) + intra_sector_offset;
-}
-
-
-
+long fat_entry_byte_position(struct bpb bpb, int fat_id, int data_cluster_id);
 
 struct directory_entry {
     /**

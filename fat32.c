@@ -41,11 +41,29 @@ struct bpb read_bpb(int fd) {
         .total_fats = read_int(fd, 16, 1),
         .total_sectors = read_int(fd, 32, 4),
         .fat_size = read_int(fd, 36, 2),
-        .root_cluster_position = read_int(fd, 44, 4)
+        .root_cluster_id = read_int(fd, 44, 4)
     };
     return bpb;
 }
 
 bool is_directory(struct directory_entry entry) {
     return ith_bit(entry.attributes, 0x10) == 1;
+}
+
+long byte_position(struct bpb bpb, int sector_id) {
+    return bpb.bytes_per_sector * sector_id;
+}
+
+int fat_entry_offset(int data_cluster_id) {
+    return 4 /* bytes */ * data_cluster_id;
+}
+
+int fat_entry_sector_position(struct bpb bpb, int fat_id, int data_cluster_id) {
+    int fat_offset = fat_id * bpb.fat_size;
+    return bpb.total_reserved_sectors + (fat_offset + (fat_entry_offset(data_cluster_id) / bpb.bytes_per_sector));
+}
+
+long fat_entry_byte_position(struct bpb bpb, int fat_id, int data_cluster_id) {
+    int intra_sector_offset = fat_entry_offset(data_cluster_id) % bpb.bytes_per_sector;
+    return (fat_entry_sector_position(bpb, data_cluster_id, fat_id) * bpb.bytes_per_sector) + intra_sector_offset;
 }
