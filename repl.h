@@ -1,6 +1,7 @@
 #ifndef FSU_REPL
 #define FSU_REPL
 
+#include "tool_context.h"
 #include <stdbool.h>
 
 bool continue_repl;
@@ -36,5 +37,5 @@ struct command parse_command(char* str);
  */
 void free_command(struct command command);
 
-void repl();
+void repl(struct tool_context context);
 #endif

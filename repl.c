@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-void repl() {
+void repl(struct tool_context context) {
     continue_repl = true;
     printf("FAT32 Tools Started\n");
  
