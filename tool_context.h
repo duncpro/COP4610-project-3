@@ -13,7 +13,7 @@ struct tool_context {
 };
 
 /**
- * Context which is made available to FAT32 Tools REPL commands.
+ * Context which is made available to all REPL command handlers.
  */
 struct command_context {
     struct tool_context* tool_context;

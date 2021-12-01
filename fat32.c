@@ -105,7 +105,15 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
             offset += 32;
 
             if (is_long_dir_name(image_fd, dir_sector_pos + offset)) continue;
+
+            dir.entries = realloc(dir.entries, sizeof(struct directory) * (dir.total_entries + 1));
+            struct directory_entry new_entry;
+            pread(image_fd, new_entry.file_name, 8, offset + dir_sector_pos);
+            new_entry.file_name[8] = '\0';
+            trim_leading(new_entry.file_name);
+            dir.entries[dir.total_entries] = new_entry;
             dir.total_entries++;
+
         }
     }
 

@@ -81,6 +81,7 @@ struct cluster_list scan_fat(struct bpb bpb, unsigned int initial_entry, int ima
 void free_cluster_list(struct cluster_list cluster_list);
 
 #define FAT_MAX_FILE_NAME 8
+
 #define FAT_EXTENSION_LENGTH 3
 
 struct directory_entry {
