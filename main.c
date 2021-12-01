@@ -1,10 +1,12 @@
 #include "repl.h"
 #include "tool_context.h"
 #include "fat32.h"
+#include "dispatch.h"
+#include "string_utils.h"
+#include "command.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <string.h>
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -13,8 +15,7 @@ int main(int argc, char* argv[]) {
     }
 
     struct tool_context context = { 
-        .image_fd = open(argv[1], O_RDWR),
-        .verbose = argc == 3 && strcmp(argv[2], "verbose") == 0
+        .image_fd = open(argv[1], O_RDWR)
     };
 
     if (context.image_fd == -1) {
@@ -23,13 +24,15 @@ int main(int argc, char* argv[]) {
     }
 
     printf("FAT32 Tools\n");
-    if (context.verbose) {
-        printf("Verbose logging enabled.\n");
-    }
 
     context.bpb = read_bpb(context.image_fd);
 
-    repl(context);
+    if (argc > 2) {
+        dispatch(parse_command(argv[2]), &context);
+    } else {
+        repl(context);
+    }
+
 
     close(context.image_fd);
     return 0;

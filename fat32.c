@@ -10,40 +10,33 @@ int ith_bit(unsigned char byte, unsigned int i) {
     return (byte >> i) & 1;
 }
 
-unsigned int little_endian_unsigned_int(unsigned char* bytes, unsigned int bytes_length) {
+uint32_t little_endian_unsigned_int(uint8_t* bytes, int length) {
     int sum = 0;
-    if (bytes_length > sizeof(unsigned int)) {
-        printf("The length of the integer byte array representation exceeds that which can be stored in C Langage Integer");
-        return -1;
-    }
-    for (int i = 0; i < sizeof(unsigned int); i++) {
-        if (i >= bytes_length) break;
-        int byte_significance = 8 * i;
-        sum += (bytes[i] << byte_significance);
+    for (int i = 0; i < length; i++) {
+        sum += (((uint32_t) bytes[i]) << (i * 8));
     }
     return sum;
 }
 
-unsigned int read_unisgned_int(int fd, unsigned int field, unsigned int field_length) {
-    unsigned char buffer[field_length];
-    int total_read = pread(fd, buffer, field_length, field);
+uint32_t read_unisgned_little_endian_int(int fd, uint32_t address, uint8_t field_length) {
+    uint8_t buffer[field_length];
+    int total_read = pread(fd, buffer, field_length, address);
     if (total_read < field_length) {
         printf("Malformed FAT 32 image.\n");
         printf("Expected the BPB to contain a required field but it did not.\n");
-        return -1;
     }
     return little_endian_unsigned_int(buffer, total_read);
 }
 
 struct bpb read_bpb(int fd) {
     struct bpb bpb = {
-        .bytes_per_sector = read_unisgned_int(fd, 11, 2),
-        .sectors_per_cluster = read_unisgned_int(fd, 13, 1),
-        .total_reserved_sectors = read_unisgned_int(fd, 14, 2),
-        .total_fats = read_unisgned_int(fd, 16, 1),
-        .total_sectors = read_unisgned_int(fd, 32, 4),
-        .fat_size = read_unisgned_int(fd, 36, 2),
-        .root_cluster_id = read_unisgned_int(fd, 44, 4)
+        .bytes_per_sector = read_unisgned_little_endian_int(fd, 11, 2),
+        .sectors_per_cluster = read_unisgned_little_endian_int(fd, 13, 1),
+        .total_reserved_sectors = read_unisgned_little_endian_int(fd, 14, 2),
+        .total_fats = read_unisgned_little_endian_int(fd, 16, 1),
+        .total_sectors = read_unisgned_little_endian_int(fd, 32, 4),
+        .fat_size = read_unisgned_little_endian_int(fd, 36, 4),
+        .root_cluster_id = read_unisgned_little_endian_int(fd, 44, 4)
     };
     return bpb;
 }
@@ -52,29 +45,29 @@ bool is_directory(struct directory_entry entry) {
     return ith_bit(entry.attributes, 0x10) == 1;
 }
 
-unsigned int initial_data_sector(struct bpb bpb) {
-    return bpb.total_reserved_sectors /* + (bpb.total_fats * bpb.fat_size) */;
+unsigned int find_initial_data_sector(struct bpb bpb) {
+    return bpb.total_reserved_sectors + (bpb.total_fats * bpb.fat_size);
 }
 
-unsigned int initial_data_sector_in_cluster(struct bpb bpb, unsigned int cluster_id) {
-    return ((cluster_id - bpb.root_cluster_id) * bpb.sectors_per_cluster) + initial_data_sector(bpb);
+unsigned int find_leading_sector_for_cluster(struct bpb bpb, unsigned int cluster_id) {
+    return ((cluster_id - bpb.root_cluster_id) * bpb.sectors_per_cluster) + find_initial_data_sector(bpb);
 }
 
 unsigned int next_cluster_id(unsigned int current_cluster_id, int image_fd, struct bpb bpb) {
-    unsigned int fat_offset = (current_cluster_id * 4);
-    unsigned int current_fat_sec_id = bpb.total_reserved_sectors + (fat_offset / bpb.bytes_per_sector);
-    unsigned int entry_offset = fat_offset % bpb.bytes_per_sector;
-    return read_unisgned_int(image_fd, (entry_offset + current_fat_sec_id) * bpb.bytes_per_sector, 4);
+    unsigned int fat_start_sector_id = bpb.total_reserved_sectors + (8 / bpb.bytes_per_sector);
+    unsigned int fat_start = (fat_start_sector_id * bpb.bytes_per_sector); /* bytes */;
+    unsigned int entry_position = fat_start + (current_cluster_id * 4);
+    return read_unisgned_little_endian_int(image_fd, entry_position, 4);
 }
 
 struct cluster_list scan_fat(struct bpb bpb, unsigned int start_at_cluster_id, int image_fd) {
     struct cluster_list cluster_list = {
         .total_clusters = 0,
-        .cluster_ids = malloc(0)
+        .cluster_ids = NULL
     };
-    unsigned cluster_id = start_at_cluster_id;
+    unsigned int cluster_id = start_at_cluster_id;
     while (cluster_id > 0x0000002 && cluster_id < 0xFFFFFF6) {
-        cluster_list.cluster_ids = realloc(cluster_list.cluster_ids, sizeof(unsigned int) * cluster_list.total_clusters + 1);
+        cluster_list.cluster_ids = realloc(cluster_list.cluster_ids, sizeof(unsigned int) * (cluster_list.total_clusters + 1));
         cluster_list.cluster_ids[cluster_list.total_clusters] = cluster_id;
         cluster_list.total_clusters++;
         cluster_id = next_cluster_id(cluster_id, image_fd, bpb);
@@ -82,23 +75,37 @@ struct cluster_list scan_fat(struct bpb bpb, unsigned int start_at_cluster_id, i
     return cluster_list;
 }
 
+bool is_directory_terminator(int image_fd, unsigned int entry_pos) {
+    uint8_t byte[1];
+    int prefix = pread(image_fd, byte, 1, entry_pos);
+    return byte[0] == 0x00 || byte[0] == 0xE5 || byte[0] == 0x02;
+}
+
+uint8_t read_byte(int image_fd, uint32_t address) {
+    uint8_t byte[1];
+    pread(image_fd, byte, 1, address);
+    return byte[0];
+}
+
+bool is_long_dir_name(int image_fd, unsigned int entry_pos) {
+    return read_byte(image_fd, entry_pos + 11) & 0x0F; 
+}
+
 struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd) {
     struct directory dir = {
         .total_entries = 0,
-        .entries = malloc(0)
+        .entries = NULL
     };
 
-    struct cluster_list cluster_list = scan_fat(bpb, initial_data_sector_in_cluster(bpb, bpb.root_cluster_id), image_fd);
-    printf("total clusters: %i\n", cluster_list.total_clusters);
-
+    struct cluster_list cluster_list = scan_fat(bpb, find_leading_sector_for_cluster(bpb, initial_dir_cluster_id), image_fd);
     for (int i = 0; i < cluster_list.total_clusters; i++) {
-        unsigned int dir_sector = initial_data_sector_in_cluster(bpb, cluster_list.cluster_ids[i]);
-        int local_entry_id = 0;
-        bool is_last_entry = read_unisgned_int(image_fd, dir_sector + (local_entry_id * 32), 4) == 0x00;
-        while (!is_last_entry) {
-            local_entry_id++;
+        unsigned int dir_sector_pos = (find_leading_sector_for_cluster(bpb, initial_dir_cluster_id) * bpb.bytes_per_sector);
+        unsigned int offset = 0;
+        while (!is_directory_terminator(image_fd, dir_sector_pos + offset) && offset < (bpb.bytes_per_sector * bpb.sectors_per_cluster)) {
+            offset += 32;
+
+            if (is_long_dir_name(image_fd, dir_sector_pos + offset)) continue;
             dir.total_entries++;
-            is_last_entry = read_unisgned_int(image_fd, dir_sector + (local_entry_id * 32), 4) == 0x00;
         }
     }
 

@@ -9,7 +9,6 @@
  */
 struct tool_context {
     int image_fd;  
-    bool verbose;
     struct bpb bpb;
 };
 

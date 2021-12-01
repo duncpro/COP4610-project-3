@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "tool_context.h": "c"
+        "tool_context.h": "c",
+        "fcntl.h": "c"
     }
 }

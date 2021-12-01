@@ -5,17 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "clang - Build and debug active file",
+            "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/${fileBasenameNoExtension}",
-            "args": [],
+            "program": "${workspaceFolder}/build/fat32_tools.o",
+            "args": [
+                "assets/canvas_example.img",
+                "lsroot"
+            ],
+            "preLaunchTask": "Build",
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false,
             "MIMode": "lldb",
-            "preLaunchTask": "C/C++: clang build active file"
         }
     ]
 }

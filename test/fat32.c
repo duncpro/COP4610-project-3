@@ -1,11 +1,13 @@
 #include "./../fat32.c"
 #include "./fat32_test_tools.c"
+#include "./../string_utils.c"
 #include <fcntl.h>
 #include <unistd.h>
+#include <arpa/inet.h>
 
 void test_little_endian_int_general_case() {
-    unsigned char bytes[] = {0x01, 0x01};
-    int expected = 257;
+    unsigned char bytes[] = {0x01, 0x00};
+    int expected = 1;
     int actual = little_endian_unsigned_int(bytes, 2);
     assert_int_equals(expected, actual, "little_endian_int (general)");
 }
@@ -30,7 +32,6 @@ void test_ith_bit() {
     
     bool first_bit_correct = (ith_bit(byte, 0) == 0);
     bool second_bit_correct = (ith_bit(byte, 1) == 1);
-    bool third_bit_correct = (ith_bit(byte, 2) == 0);
 
     assert_true(first_bit_correct && second_bit_correct, "ith_bit");
 }
