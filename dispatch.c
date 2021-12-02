@@ -32,6 +32,7 @@ int dispatch(struct command cmd, struct tool_context* tool_context) {
         return REPL_STATUS_CONTINUE;
     }
     
+    
     printf("Unknown action: %s. Consult the project spec for a list of available actions.\n", action(cmd));
     return REPL_STATUS_CONTINUE;
 }

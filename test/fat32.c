@@ -4,7 +4,6 @@
 #include "./../path.c"
 #include <fcntl.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 
 void test_little_endian_int_general_case() {
     unsigned char bytes[] = {0x01, 0x00};

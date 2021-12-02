@@ -22,9 +22,17 @@ void test_parse_path_general() {
     free_path(p);
 }
 
+void test_parse_path_single_file() {
+    struct fat_path* p = parse_path("hello");
+    assert_int_equals(1, p->total_segments, "parse_path (single file)");
+    assert_str_equals("hello", p->segments[0], "parse_path (single file, segments)");
+    free_path(p);
+}
+
 int main() {
     test_parse_path_empty();
     test_parse_path_single_slash();
     test_parse_path_general();
+    test_parse_path_single_file();
     return 0;
 }

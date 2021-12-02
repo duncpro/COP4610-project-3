@@ -120,6 +120,12 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
                 new_entry.file_name[8] = '\0';
                 trim_leading(new_entry.file_name);
 
+                // file extension
+                char extension[FAT_EXTENSION_LENGTH + 1];
+                pread(image_fd, extension, 3, offset + dir_sector_pos + 8);
+                extension[3] = '\0';
+                strcpy(new_entry.extension, trim(extension));
+
                 new_entry.attributes = read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 11, 1);
                 new_entry.file_size = read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 28, 4);
                 new_entry.cluster_id = combine_ints(
@@ -148,11 +154,11 @@ void free_directory(struct directory dir) {
  * a NULL pointer is returned instead.
  */
 struct directory_entry* get_entry_by_path_segment(struct directory* parent_dir, char* child_path_segment) {
-    for (int i = 0; i < parent_dir->total_entries; i++) {\
-    char current_entry_name[FAT_EXTENSION_LENGTH + FAT_MAX_FILE_NAME + 1];
-    current_entry_name[0] = '\0';
-    strcat(current_entry_name, parent_dir->entries[i].file_name);
-    strcat(current_entry_name, parent_dir->entries[i].extension);
+    for (int i = 0; i < parent_dir->total_entries; i++) {
+        char current_entry_name[FAT_EXTENSION_LENGTH + FAT_MAX_FILE_NAME + 1];
+        current_entry_name[0] = '\0';
+        strcat(current_entry_name, parent_dir->entries[i].file_name);
+        strcat(current_entry_name, parent_dir->entries[i].extension);
         if (strcmp(current_entry_name, child_path_segment) == 0) {
             return &(parent_dir->entries[i]);
         }
@@ -170,9 +176,10 @@ struct directory_entry* find_directory_entry(struct bpb bpb, int image_fd, char*
 
     struct directory parent_dir = read_directory(bpb, bpb.root_cluster_id, image_fd);
     for (int i = 0; i < path->total_segments; i++) {
-        bool is_final_segment = path->total_segments == (i - 1);
+        bool is_final_segment = (path->total_segments - 1) == i;
 
         struct directory_entry* entry = get_entry_by_path_segment(&parent_dir, path->segments[i]);
+        if (entry == NULL) return NULL;
 
         if (is_final_segment) {
             struct directory_entry* entry_copy = (struct directory_entry*) malloc(sizeof(struct directory_entry));

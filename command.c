@@ -10,7 +10,7 @@ char* action(struct command cmd) {
 
 char** args(struct command cmd) {
     if (cmd.total_words <= 1) return NULL;
-    return &(cmd.words[0]) + sizeof(char*);
+    return &(cmd.words[1]);
 }
 
 struct command parse_command(char* str) {

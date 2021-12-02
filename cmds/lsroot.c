@@ -9,7 +9,7 @@ void lsroot_cmd(struct command_context context) {
     printf("total entries: %i\n", dir.total_entries);
     for (int i = 0; i < dir.total_entries; i++) {
         struct directory_entry entry = dir.entries[i];
-        printf("%s %s\n", entry.file_name, is_directory(entry) ? "(d)" : "");
+        printf("%s%s\n", entry.file_name, is_directory(entry) ? " (d)" : entry.extension);
     }
     free_directory(dir);
 }
