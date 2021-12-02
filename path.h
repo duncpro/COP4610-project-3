@@ -21,6 +21,13 @@ struct fat_path {
  */
 struct fat_path* parse_path(char* str);
 
+/**
+ * Creates an absolute path using the given relative path and and absolute root path.
+ * Both inputs remain unchanged, and a new absolute fat_path is allocated and returned.
+ * The caller should take care to release the returned path as well the input paths when they are no longer needed.
+ */ 
+struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path absolute_root);
+
 void free_path(struct fat_path*);
 
 #endif

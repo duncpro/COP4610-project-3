@@ -29,10 +29,34 @@ void test_parse_path_single_file() {
     free_path(p);
 }
 
+void test_as_absolute_path() {
+    struct fat_path* root = parse_path("hello");
+    struct fat_path* relative = parse_path("world");
+    struct fat_path* combined = as_absolute_path(*relative, *root);
+    assert_int_equals(2, combined->total_segments, "as_absolute_path (general, total segments)");
+    assert_str_equals("hello", combined->segments[0], "as_absolute_path (general, 1st segment)");
+    assert_str_equals("world", combined->segments[1], "as_absolute_path (general, 2nd segment)");
+    free_path(root);
+    free_path(relative);
+    free_path(combined);
+}
+
+void test_as_absolute_path_ascend_tree() {
+    struct fat_path* root = parse_path("hello");
+    struct fat_path* relative = parse_path("../");
+    struct fat_path* combined = as_absolute_path(*relative, *root);
+    assert_int_equals(0, combined->total_segments, "as_absolute_path (ascend tree, total segments)");
+    free_path(root);
+    free_path(relative);
+    free_path(combined);
+}
+
 int main() {
     test_parse_path_empty();
     test_parse_path_single_slash();
     test_parse_path_general();
     test_parse_path_single_file();
+    test_as_absolute_path();
+    test_as_absolute_path_ascend_tree();
     return 0;
 }
