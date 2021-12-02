@@ -161,20 +161,28 @@ struct directory_entry* get_entry_by_path_segment(struct directory* parent_dir, 
 }
 
 /**
- * Returns a pointer to a dynamically allocated directory_entry struct representing the 
+ * Returns a pointer to a dynamically allocated directory_entry struct representing the directory entry
+ * associated with the given absolute path string. If the given absolute path does not point to a directory_entry
+ * then a NULL pointer is returned instead.
  */
 struct directory_entry* find_directory_entry(struct bpb bpb, int image_fd, char* path_str) {
-    struct fat_path* path = parse_path(path);
+    struct fat_path* path = parse_path(path_str);
+
     struct directory parent_dir = read_directory(bpb, bpb.root_cluster_id, image_fd);
     for (int i = 0; i < path->total_segments; i++) {
         bool is_final_segment = path->total_segments == (i - 1);
 
         struct directory_entry* entry = get_entry_by_path_segment(&parent_dir, path->segments[i]);
 
-        if (!is_final_segment && !is_directory(*entry)) {
-            return NULL;
+        if (is_final_segment) {
+            struct directory_entry* entry_copy = (struct directory_entry*) malloc(sizeof(struct directory_entry));
+            memcpy(entry_copy, entry, sizeof(struct directory_entry));
+            return entry_copy;
+        } else {
+            if (!is_directory(*entry)) return NULL;
+            parent_dir = read_directory(bpb, entry->cluster_id, image_fd);
         }
-
-
     }
+
+    return NULL;
 }

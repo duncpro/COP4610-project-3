@@ -1,6 +1,7 @@
 #include "./../fat32.c"
 #include "./fat32_test_tools.c"
 #include "./../string_utils.c"
+#include "./../path.c"
 #include <fcntl.h>
 #include <unistd.h>
 #include <arpa/inet.h>

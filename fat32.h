@@ -112,7 +112,7 @@ struct directory {
  */
 struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd);
 
-struct directory_entry find_directory_entry(struct bpb bpb, int image_fd, char* path);
+struct directory_entry* find_directory_entry(struct bpb bpb, int image_fd, char* path_str);
 
 void free_directory(struct directory directory);
 
