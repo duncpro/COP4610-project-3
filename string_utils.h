@@ -17,6 +17,12 @@ void trim_trailing(char* str);
  */ 
 char* trim(char* str);
 
+/**
+ * Returns the index after the rightmost character matching c.
+ * If no characters match the given character then zero is returned instead.
+ */
+int index_after_last(char c, char* in);
+
 int count(char c, char* in);
 
 void remove_all(char c, char* in);

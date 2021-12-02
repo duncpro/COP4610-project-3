@@ -5,6 +5,13 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
+#include <limits.h>
+
+void print_prompt(struct tool_context context) {
+    printf("%s> ", context.image_file_name);
+}
+
 
 void repl(struct tool_context context) {
     int repl_status = REPL_STATUS_CONTINUE;
@@ -12,8 +19,7 @@ void repl(struct tool_context context) {
     printf("Type \"exit\" to shutdown REPL.\n");
  
     while (repl_status == REPL_STATUS_CONTINUE) {
-        printf("Waiting for input... Enter a command now.\n");
-        
+        print_prompt(context);
         char* line_buffer = NULL;
         size_t line_buffer_size;
         int line_length = getline(&line_buffer, &line_buffer_size, stdin);

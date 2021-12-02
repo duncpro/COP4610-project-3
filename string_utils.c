@@ -44,3 +44,11 @@ void remove_all(char c, char* in) {
     new[new_length] = '\0';
     strcpy(in, new);
 }
+
+
+int index_after_last(char c, char* in) {
+    for (int i = strlen(in) - 1; i >= 0; i--) {
+        if (in[i] == c) return i + 1;
+    }
+    return 0;
+}

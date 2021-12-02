@@ -80,8 +80,15 @@ struct cluster_list scan_fat(struct bpb bpb, unsigned int initial_entry, int ima
  */
 void free_cluster_list(struct cluster_list cluster_list);
 
+/**
+ * The maximum number of characters which can be included in the the file name of a FAT directory entry.
+ * This total does not include the file's extension.
+ */
 #define FAT_MAX_FILE_NAME 8
 
+/**
+ * The maximum number of characters which can be included in the file extension of a FAT directory entry.
+ */
 #define FAT_EXTENSION_LENGTH 3
 
 struct directory_entry {

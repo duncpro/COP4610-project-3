@@ -6,10 +6,14 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # PARTICULAR PURPOSE.
 
 # This program built for i386-apple-darwin11.3.0
+ 
+make: *** No rule to make target `all'.  Stop.
+ 
 
-# Make data base, printed on Tue Nov 30 22:19:04 2021
+# Make data base, printed on Wed Dec  1 19:46:58 2021
 
 # Variables
+ 
 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
@@ -154,9 +158,9 @@ VSCODE_PID = 44931
 
 # Directories
 
-# . (device 16777221, inode 72219491): 24 files, no impossibilities.
+# . (device 16777221, inode 72219491): 25 files, no impossibilities.
 
-# 24 files, no impossibilities in 1 directories.
+# 25 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -172,6 +176,7 @@ string_utils.c:
 
 # Not a target:
 all:
+ 
 #  Command-line target.
 #  Implicit rule search has been done.
 #  File does not exist.
@@ -197,6 +202,12 @@ main.c:
 #  File has not been updated.
 
 # Not a target:
+path.c:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
 .SUFFIXES:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
@@ -211,7 +222,7 @@ fat32.c:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2021-11-30 21:40:21
+#  Last modified 2021-12-01 19:46:39
 #  File has been updated.
 #  Successfully updated.
 # variable set hash-table stats:
@@ -245,13 +256,13 @@ command.c:
 #  Modification time never checked.
 #  File has not been updated.
 
-build/fat32_tools.o: fat32.c repl.c string_utils.c main.c cmds/info.c cmds/size.c cmds/lsroot.c command.c dispatch.c
+build/fat32_tools.o: fat32.c repl.c string_utils.c main.c cmds/info.c cmds/size.c cmds/lsroot.c command.c dispatch.c path.c
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
 #  commands to execute (from `Makefile', line 2):
 	mkdir -p build
-	cc -g -o ./build/fat32_tools.o fat32.c repl.c string_utils.c main.c command.c dispatch.c
+	cc -g -o ./build/fat32_tools.o fat32.c repl.c string_utils.c main.c command.c dispatch.c path.c
 	
 
 # Not a target:
@@ -270,9 +281,6 @@ run: build/fat32_tools.o
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
- 
-make: *** No rule to make target `all'.  Stop.
- 
 #  commands to execute (from `Makefile', line 16):
 	./build/fat32_tools.o ./assets/canvas_example.img
 	
@@ -290,7 +298,7 @@ cmds/lsroot.c:
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=17/1024=2%, Rehash=0, Collisions=0/40=0%
+# Load=18/1024=2%, Rehash=0, Collisions=0/42=0%
 # VPATH Search Paths
 
 # No `vpath' search paths.
@@ -302,6 +310,6 @@ cmds/lsroot.c:
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Tue Nov 30 22:19:04 2021
+# Finished Make data base on Wed Dec  1 19:46:58 2021
 
  
