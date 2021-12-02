@@ -12,6 +12,13 @@ void test_little_endian_int_general_case() {
     assert_int_equals(expected, actual, "little_endian_int (general)");
 }
 
+void test_combine_ints() {
+    uint16_t low = 1;
+    uint16_t high = 1;
+    int expected = 65537;
+    assert_int_equals(expected, combine_ints(high, low), "combine_ints (general)");
+}
+
 void test_little_endian_int_single_case() {
     unsigned char bytes[] = {0x01};
     int expected = 1;
@@ -41,5 +48,6 @@ int main() {
     test_little_endian_int_single_case();
     test_read_bpb();
     test_ith_bit();
+    test_combine_ints();
     return 0;
 }

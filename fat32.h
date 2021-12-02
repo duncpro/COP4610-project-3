@@ -96,7 +96,7 @@ struct directory_entry {
     char extension[FAT_EXTENSION_LENGTH + 1];
     unsigned int file_size;
     unsigned char attributes;
-    int cluster_id;
+    uint32_t cluster_id;
 };
 
 bool is_directory(struct directory_entry);
@@ -107,7 +107,12 @@ struct directory {
 };
 
 
+/**
+ * Returns a directory struct containing all the files in the given directory.
+ */
 struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd);
+
+struct directory_entry find_directory_entry(struct bpb bpb, int image_fd, char* path);
 
 void free_directory(struct directory directory);
 

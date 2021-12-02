@@ -1,5 +1,6 @@
 #include "fat32.h"
 #include "string_utils.h"
+#include "path.h"
 #include <math.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -8,6 +9,13 @@
 
 int ith_bit(unsigned char byte, unsigned int i) {
     return (byte >> i) & 1;
+}
+
+uint32_t combine_ints(uint16_t high, uint16_t low) {
+    uint32_t combined = 0;
+    combined += (((uint32_t) high) << 16);
+    combined += ((uint32_t) low);
+    return combined;
 }
 
 uint32_t little_endian_unsigned_int(uint8_t* bytes, int length) {
@@ -67,7 +75,7 @@ struct cluster_list scan_fat(struct bpb bpb, unsigned int start_at_cluster_id, i
     };
     unsigned int cluster_id = start_at_cluster_id;
     while (cluster_id > 0x0000002 && cluster_id < 0xFFFFFF6) {
-        cluster_list.cluster_ids = realloc(cluster_list.cluster_ids, sizeof(unsigned int) * (cluster_list.total_clusters + 1));
+        cluster_list.cluster_ids = (unsigned int*) realloc(cluster_list.cluster_ids, sizeof(unsigned int) * (cluster_list.total_clusters + 1));
         cluster_list.cluster_ids[cluster_list.total_clusters] = cluster_id;
         cluster_list.total_clusters++;
         cluster_id = next_cluster_id(cluster_id, image_fd, bpb);
@@ -94,7 +102,7 @@ bool is_long_dir_name(int image_fd, unsigned int entry_pos) {
 struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd) {
     struct directory dir = {
         .total_entries = 0,
-        .entries = malloc(0)
+        .entries = NULL
     };
 
     struct cluster_list cluster_list = scan_fat(bpb, find_leading_sector_for_cluster(bpb, initial_dir_cluster_id), image_fd);
@@ -104,7 +112,7 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
         while (!is_directory_terminator(image_fd, dir_sector_pos + offset) && offset < (bpb.bytes_per_sector * bpb.sectors_per_cluster)) {
 
             if (!is_long_dir_name(image_fd, dir_sector_pos + offset)) {
-                dir.entries = realloc(dir.entries, sizeof(struct directory) * (dir.total_entries + 1));
+                dir.entries = (struct directory_entry*) realloc(dir.entries, sizeof(struct directory_entry) * (dir.total_entries + 1));
                 struct directory_entry new_entry;
 
                 // file name
@@ -113,6 +121,11 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
                 trim_leading(new_entry.file_name);
 
                 new_entry.attributes = read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 11, 1);
+                new_entry.file_size = read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 28, 4);
+                new_entry.cluster_id = combine_ints(
+                    read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 20, 2),
+                    read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 26, 2)
+                );
 
                 dir.entries[dir.total_entries] = new_entry;
                 dir.total_entries++;
@@ -127,4 +140,41 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
 
 void free_directory(struct directory dir) {
     free(dir.entries);
+}
+
+/**
+ * Returns a pointer to the directory entry which matches the given child path segment.
+ * If no entry exists within the given directory which matches the given child path segment then
+ * a NULL pointer is returned instead.
+ */
+struct directory_entry* get_entry_by_path_segment(struct directory* parent_dir, char* child_path_segment) {
+    for (int i = 0; i < parent_dir->total_entries; i++) {\
+    char current_entry_name[FAT_EXTENSION_LENGTH + FAT_MAX_FILE_NAME + 1];
+    current_entry_name[0] = '\0';
+    strcat(current_entry_name, parent_dir->entries[i].file_name);
+    strcat(current_entry_name, parent_dir->entries[i].extension);
+        if (strcmp(current_entry_name, child_path_segment) == 0) {
+            return &(parent_dir->entries[i]);
+        }
+    }
+    return NULL;
+}
+
+/**
+ * Returns a pointer to a dynamically allocated directory_entry struct representing the 
+ */
+struct directory_entry* find_directory_entry(struct bpb bpb, int image_fd, char* path_str) {
+    struct fat_path* path = parse_path(path);
+    struct directory parent_dir = read_directory(bpb, bpb.root_cluster_id, image_fd);
+    for (int i = 0; i < path->total_segments; i++) {
+        bool is_final_segment = path->total_segments == (i - 1);
+
+        struct directory_entry* entry = get_entry_by_path_segment(&parent_dir, path->segments[i]);
+
+        if (!is_final_segment && !is_directory(*entry)) {
+            return NULL;
+        }
+
+
+    }
 }

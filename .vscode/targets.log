@@ -10,11 +10,11 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 make: *** No rule to make target `all'.  Stop.
  
 
-# Make data base, printed on Wed Dec  1 19:46:58 2021
+# Make data base, printed on Thu Dec  2 15:03:01 2021
 
 # Variables
- 
 
+ 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
 # automatic
@@ -113,6 +113,7 @@ TMPDIR = /var/folders/5c/jqsjtc594k95vhm0fyfbzw840000gn/T/
 VSCODE_IPC_HOOK = /Users/duncanproctor/Library/Application Support/Code/1.62.3-main.sock
 # makefile
 MAKEFLAGS = Rrqp
+ 
 # environment
 MFLAGS = -Rrqp
 # automatic
@@ -158,6 +159,7 @@ VSCODE_PID = 44931
 
 # Directories
 
+ 
 # . (device 16777221, inode 72219491): 25 files, no impossibilities.
 
 # 25 files, no impossibilities in 1 directories.
@@ -176,7 +178,6 @@ string_utils.c:
 
 # Not a target:
 all:
- 
 #  Command-line target.
 #  Implicit rule search has been done.
 #  File does not exist.
@@ -222,7 +223,7 @@ fat32.c:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2021-12-01 19:46:39
+#  Last modified 2021-12-02 15:02:51
 #  File has been updated.
 #  Successfully updated.
 # variable set hash-table stats:
@@ -245,9 +246,11 @@ test:
 	cc -o ./build/test/fat32.o test/fat32.c
 	cc -o ./build/test/string_utils.o test/string_utils.c 
 	cc -o ./build/test/command.o test/command.c
+	cc -o ./build/test/path.o test/path.c
 	./build/test/fat32.o
 	./build/test/string_utils.o
 	./build/test/command.o	
+	./build/test/path.o
 	
 
 # Not a target:
@@ -281,7 +284,7 @@ run: build/fat32_tools.o
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  commands to execute (from `Makefile', line 16):
+#  commands to execute (from `Makefile', line 18):
 	./build/fat32_tools.o ./assets/canvas_example.img
 	
 
@@ -298,6 +301,7 @@ cmds/lsroot.c:
 #  File has not been updated.
 
 # files hash-table stats:
+ 
 # Load=18/1024=2%, Rehash=0, Collisions=0/42=0%
 # VPATH Search Paths
 
@@ -310,6 +314,6 @@ cmds/lsroot.c:
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Wed Dec  1 19:46:58 2021
+# Finished Make data base on Thu Dec  2 15:03:01 2021
 
  

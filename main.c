@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
         .image_fd = open(argv[1], O_RDWR)
     };
 
-    filename_from_path(argv[1], context.image_file_name);
+    filename_from_path_string(argv[1], context.image_file_name);
 
     if (context.image_fd == -1) {
         printf("Bad Usage: The file located at the given path could not be opened. Check the path and try again.\n");
