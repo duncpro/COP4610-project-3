@@ -5,7 +5,7 @@
 // include command modules
 #include "cmds/info.c"
 #include "cmds/size.c"
-#include "cmds/lsroot.c"
+#include "cmds/ls.c"
 
 int dispatch(struct command cmd, struct tool_context* tool_context) {
     if (action(cmd) == NULL) return REPL_STATUS_CONTINUE;
@@ -27,8 +27,8 @@ int dispatch(struct command cmd, struct tool_context* tool_context) {
         size_cmd(context);
         return REPL_STATUS_CONTINUE;
     }
-    if (strcmp(action(cmd), "lsroot") == 0) {
-        lsroot_cmd(context);
+    if (strcmp(action(cmd), "ls") == 0) {
+        ls_cmd(context);
         return REPL_STATUS_CONTINUE;
     }
     

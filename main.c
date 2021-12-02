@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -16,8 +17,10 @@ int main(int argc, char* argv[]) {
     }
 
     struct tool_context context = { 
-        .image_fd = open(argv[1], O_RDWR)
+        .image_fd = open(argv[1], O_RDWR),
+        .cwd = (char*) malloc(0)
     };
+    set_context_cwd(&context, "");
 
     filename_from_path_string(argv[1], context.image_file_name);
 

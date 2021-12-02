@@ -9,7 +9,7 @@
 #include <limits.h>
 
 void print_prompt(struct tool_context context) {
-    printf("%s> ", context.image_file_name);
+    printf("%s%s> ", context.image_file_name, context.cwd);
 }
 
 

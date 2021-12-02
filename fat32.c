@@ -170,12 +170,14 @@ struct directory_entry* get_entry_by_path_segment(struct directory* parent_dir, 
 /**
  * Returns a pointer to a dynamically allocated directory_entry struct representing the directory entry
  * associated with the given absolute path string. If the given absolute path does not point to a directory_entry
- * then a NULL pointer is returned instead.
+ * then a NULL pointer is returned instead. If this path points to the root directory, then of course no directory
+ * entry exists for the root directory and this function will return null.
  */
 struct directory_entry* find_directory_entry(struct bpb bpb, int image_fd, char* path_str) {
     struct fat_path* path = parse_path(path_str);
 
     struct directory parent_dir = read_directory(bpb, bpb.root_cluster_id, image_fd);
+
     for (int i = 0; i < path->total_segments; i++) {
         bool is_final_segment = (path->total_segments - 1) == i;
 

@@ -29,6 +29,8 @@ struct tool_context {
     char* cwd;
 };
 
+void set_context_cwd(struct tool_context* context, char* new_cwd);
+
 /**
  * Context which is made available to all REPL command handlers.
  */
