@@ -28,6 +28,17 @@ struct fat_path* parse_path(char* str);
  */ 
 struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path absolute_root);
 
+/**
+ * Allocates a string containing the string representation of the given fat_path struct.
+ * The caller should free the returned string when finished.
+ * This function is the inverse of parse_path.
+ * 
+ * The returned path string is always relative (does not begin with a slash).
+ * If the given path struct contains no segments then an empty string is returned.
+ * The returned path string will never end in a slash.
+ */ 
+char* as_path_string(struct fat_path path);
+
 void free_path(struct fat_path*);
 
 #endif

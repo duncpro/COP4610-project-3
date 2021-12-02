@@ -51,6 +51,16 @@ void test_as_absolute_path_ascend_tree() {
     free_path(combined);
 }
 
+void test_as_path_str() {
+    char* expected = "hello/world";
+    struct fat_path* path = parse_path(expected);
+    char* actual = as_path_string(*path);
+    assert_str_equals(expected, actual, "as_path_str");
+    free(actual);
+    free_path(path);
+
+}
+
 int main() {
     test_parse_path_empty();
     test_parse_path_single_slash();
@@ -58,5 +68,6 @@ int main() {
     test_parse_path_single_file();
     test_as_absolute_path();
     test_as_absolute_path_ascend_tree();
+    test_as_path_str();
     return 0;
 }
