@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/build/fat32_tools.o",
             "args": [
                 "assets/canvas_example.img",
-                "size LONGFILE"
+                "size BLUE"
             ],
             "preLaunchTask": "Build",
             "stopAtEntry": false,

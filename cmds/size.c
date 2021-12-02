@@ -9,15 +9,19 @@ void size_cmd(struct command_context context) {
         return;
     }
 
-    printf("%s\n", context.args[0]);
-
     struct directory_entry* entry = find_directory_entry(context.tool_context->bpb, context.tool_context->image_fd, context.args[0]);
     if (entry == NULL) {
         printf("The given absolute path does not lead to a real directory entry.\n");
         return;
     }
 
-    printf("File size: %i\n", entry->file_size);
+    if (is_directory(*entry)) {
+        printf("Warning: The given absolute path leads to a directory not a file. \n");
+        printf("The \"size <absolute path>\" command is intended for use exclusively with files, not directories.\n");
+        printf("The file size of a directory is always zero.\n");
+    }
+
+    printf("File size: %i bytes\n", entry->file_size);
     
     free(entry);
 }

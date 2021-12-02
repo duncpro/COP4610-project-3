@@ -84,7 +84,7 @@ void free_cluster_list(struct cluster_list cluster_list);
  * The maximum number of characters which can be included in the the file name of a FAT directory entry.
  * This total does not include the file's extension.
  */
-#define FAT_MAX_FILE_NAME 8
+#define FAT_FILENAME_LENGTH 8
 
 /**
  * The maximum number of characters which can be included in the file extension of a FAT directory entry.
@@ -92,7 +92,7 @@ void free_cluster_list(struct cluster_list cluster_list);
 #define FAT_EXTENSION_LENGTH 3
 
 struct directory_entry {
-    char file_name[FAT_MAX_FILE_NAME + 1];
+    char file_name[FAT_FILENAME_LENGTH + 1];
     char extension[FAT_EXTENSION_LENGTH + 1];
     unsigned int file_size;
     unsigned char attributes;

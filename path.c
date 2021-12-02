@@ -18,7 +18,7 @@ struct fat_path* parse_path(char* str) {
     p->total_segments = 0;
     p->segments = (char**) malloc(0);
 
-    char* path_segment = (char*) malloc(sizeof(char) * (FAT_EXTENSION_LENGTH + FAT_MAX_FILE_NAME + 1));
+    char* path_segment = (char*) malloc(sizeof(char) * (FAT_EXTENSION_LENGTH + FAT_FILENAME_LENGTH + 1));
     path_segment[0] = '\0';
     
     for (int i = 0; i < strlen(str); i++) {

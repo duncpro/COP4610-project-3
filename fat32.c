@@ -116,10 +116,11 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
                 struct directory_entry new_entry;
 
                 // file name
-                pread(image_fd, new_entry.file_name, 8, offset + dir_sector_pos);
-                new_entry.file_name[8] = '\0';
-                trim_leading(new_entry.file_name);
-
+                char filename[FAT_FILENAME_LENGTH + 1];
+                pread(image_fd, filename, 8, offset + dir_sector_pos);
+                filename[8] = '\0';
+                strcpy(new_entry.file_name, trim(filename));
+          
                 // file extension
                 char extension[FAT_EXTENSION_LENGTH + 1];
                 pread(image_fd, extension, 3, offset + dir_sector_pos + 8);
@@ -155,7 +156,7 @@ void free_directory(struct directory dir) {
  */
 struct directory_entry* get_entry_by_path_segment(struct directory* parent_dir, char* child_path_segment) {
     for (int i = 0; i < parent_dir->total_entries; i++) {
-        char current_entry_name[FAT_EXTENSION_LENGTH + FAT_MAX_FILE_NAME + 1];
+        char current_entry_name[FAT_EXTENSION_LENGTH + FAT_FILENAME_LENGTH + 1];
         current_entry_name[0] = '\0';
         strcat(current_entry_name, parent_dir->entries[i].file_name);
         strcat(current_entry_name, parent_dir->entries[i].extension);
