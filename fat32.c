@@ -42,7 +42,7 @@ struct bpb read_bpb(int fd) {
 }
 
 bool is_directory(struct directory_entry entry) {
-    return ith_bit(entry.attributes, 0x10) == 1;
+    return entry.attributes & 0x10;
 }
 
 unsigned int find_initial_data_sector(struct bpb bpb) {
@@ -94,7 +94,7 @@ bool is_long_dir_name(int image_fd, unsigned int entry_pos) {
 struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd) {
     struct directory dir = {
         .total_entries = 0,
-        .entries = NULL
+        .entries = malloc(0)
     };
 
     struct cluster_list cluster_list = scan_fat(bpb, find_leading_sector_for_cluster(bpb, initial_dir_cluster_id), image_fd);
@@ -102,18 +102,23 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
         unsigned int dir_sector_pos = (find_leading_sector_for_cluster(bpb, initial_dir_cluster_id) * bpb.bytes_per_sector);
         unsigned int offset = 0;
         while (!is_directory_terminator(image_fd, dir_sector_pos + offset) && offset < (bpb.bytes_per_sector * bpb.sectors_per_cluster)) {
+
+            if (!is_long_dir_name(image_fd, dir_sector_pos + offset)) {
+                dir.entries = realloc(dir.entries, sizeof(struct directory) * (dir.total_entries + 1));
+                struct directory_entry new_entry;
+
+                // file name
+                pread(image_fd, new_entry.file_name, 8, offset + dir_sector_pos);
+                new_entry.file_name[8] = '\0';
+                trim_leading(new_entry.file_name);
+
+                new_entry.attributes = read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 11, 1);
+
+                dir.entries[dir.total_entries] = new_entry;
+                dir.total_entries++;
+            }
+
             offset += 32;
-
-            if (is_long_dir_name(image_fd, dir_sector_pos + offset)) continue;
-
-            dir.entries = realloc(dir.entries, sizeof(struct directory) * (dir.total_entries + 1));
-            struct directory_entry new_entry;
-            pread(image_fd, new_entry.file_name, 8, offset + dir_sector_pos);
-            new_entry.file_name[8] = '\0';
-            trim_leading(new_entry.file_name);
-            dir.entries[dir.total_entries] = new_entry;
-            dir.total_entries++;
-
         }
     }
 

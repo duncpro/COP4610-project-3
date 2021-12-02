@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-
 int main(int argc, char* argv[]) {
     if (argc < 2) {
         printf("Bad Usage: Expected path to FAT32 disk image as first argument.\n");
