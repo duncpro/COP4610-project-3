@@ -22,7 +22,6 @@ string_utils.c |
 string_utils.h | header file for string_utils.h
 tool_context.c | 
 tool_context.h | header file for tool_context.h
-Makefile       | compiles files and creates an executable for program
 README.md      | docmentation of project and distribution of labor
 
 Makefile Details:
@@ -30,25 +29,24 @@ Makefile Details:
 
 
 Known Bugs + Unfinished Portions:
--
+- unfinished commands: exit, creat FILENAME, mkdir DIRNAME, mv FROM TO, open FILENAME MODE, close FILENAME, lseek FILENAME OFFSET, read FILENAME SIZE, write FILENAME SIZE "STRING", rm FILENAME, cp FILENAME TO
 
 Division of Labor: (Tasks were done on one computer)
 
-- main.c |
-- fat32.c / fat32.g |
-- path.c / path.h |
-- repl.c / repl.h |
-- string_utils.c / string_utils.h |
-- tool_context.c / tool_context.h |
-- dispatch.c / dispatch.h |
-- command.c / command.h |
-- info.c |
-- ls.c |
-- cd.c |
-- size.c |
-- 
-- 
-- 
+- main.c | Duncan Proctor & Anika Patel
+- fat32.c / fat32.h | Duncan Proctor & Anika Patel
+- path.c / path.h | Duncan Proctor
+- repl.c / repl.h | Duncan Proctor
+- string_utils.c / string_utils.h | Duncan Proctor & Anika Patel
+- tool_context.c / tool_context.h | Duncan Proctor
+- dispatch.c / dispatch.h | Duncan Proctor
+- command.c / command.h | Duncan Proctor
+- info.c | Duncan Proctor
+- ls.c | Duncan Proctor
+- cd.c | Duncan Proctor
+- size.c | Duncan Proctor
+- Makefile | Duncan Proctor & Anika Patel
+- README | Duncan Proctor & Anika Patel
 
 
  
