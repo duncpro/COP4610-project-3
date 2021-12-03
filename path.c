@@ -66,7 +66,7 @@ struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path
         char* segment = relative_path.segments[i];
         if (strcmp(segment, ".") == 0) continue;
         if (strcmp(segment, "..") == 0) {
-            new_path->total_segments--;
+            if (new_path->total_segments > 0) new_path->total_segments--;
             if (new_path->total_segments == 0) continue;
             free(new_path->segments[new_path->total_segments]);
             continue;

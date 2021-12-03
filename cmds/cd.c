@@ -21,20 +21,17 @@ void cd_cmd(struct command_context context) {
     free_path(relative);
     free_path(absolute_target);
 
+    bool is_pointing_to_fat_root_dir = (strcmp(absolute_target_path_str, "") == 0);
+    if (is_pointing_to_fat_root_dir) {
+        set_context_cwd(context.tool_context, "");
+        free(absolute_target_path_str);
+        return;
+    }
+
     struct directory_entry* dir_entry = find_directory_entry(context.tool_context->bpb, context.tool_context->image_fd, absolute_target_path_str);
 
     if (dir_entry == NULL) {
-        bool is_pointing_to_fat_root_dir = (strcmp(absolute_target_path_str, "") == 0);
-        if (is_pointing_to_fat_root_dir) {
-            set_context_cwd(context.tool_context, "");
-        }
-
-        if (!is_pointing_to_fat_root_dir) {
-            printf("The given relative path does not point to a directory, in fact, it doesn't point to anything.\n");
-        }
-
-       
-        free(dir_entry);
+        printf("The given relative path does not point to a directory, in fact, it doesn't point to anything.\n");
         free(absolute_target_path_str);
         return;
     }
