@@ -23,13 +23,15 @@ void ls_cmd(struct command_context context) {
             printf("Warning: The current working directory is set to a file not an actual directory.\n");
             printf("Files contain no discernable subfiles therefore there are no children at the path of the current directory\n");
             free(dir_entry);
+            free_path(cwd_path);
             return;
         }
         cwd_cluster_id = dir_entry->cluster_id;
+        free(dir_entry);
     }
     
     
-    struct directory dir = read_directory(context.tool_context->bpb, context.tool_context->bpb.root_cluster_id, context.tool_context->image_fd);
+    struct directory dir = read_directory(context.tool_context->bpb, cwd_cluster_id, context.tool_context->image_fd);
     printf("total entries: %i\n", dir.total_entries);
     for (int i = 0; i < dir.total_entries; i++) {
         struct directory_entry entry = dir.entries[i];
