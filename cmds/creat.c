@@ -11,7 +11,7 @@ void creat_cmd(struct command_context context) {
         return;
     }
 
-    char filename[FILENAME_MAX + 1];
+    char filename[FAT_FILENAME_LENGTH + 1];
     filename[0] = '\0';
     char extension[FAT_EXTENSION_LENGTH + 1];
     extension[0] = '\0';
@@ -22,27 +22,27 @@ void creat_cmd(struct command_context context) {
             continue;
         }
         if (part == 0) {
-            filename[strlen(filename)] = context.args[0][i];
-            filename[strlen(filename)] = '\0';
             if (strlen(filename) > FAT_FILENAME_LENGTH) {
                 printf("Unsupported Filename Length: FAT filesystem names may be up to a maximum of 8 characters long.\n");
                 return;
             }
+            int len = strlen(filename);
+            filename[len] = context.args[0][i];
+            filename[len + 1] = '\0';
         }
         if (part == 1) {
-            extension[strlen(extension)] = context.args[0][i];
-            extension[strlen(extension)] = '\0';
-
             if (strlen(extension) > FAT_EXTENSION_LENGTH) {
                 printf("Unsupported Extension Length: FAT filesystem extensions may be up to a maximum of three characters long.\n");
                 return;
             }
+            int len = strlen(extension);
+            extension[len] = context.args[0][i];
+            extension[len + 1] = '\0';
         }
     }
 
-
+    // Figure out the cluster id of the directory which contains this new file.
     uint32_t cluster_id;
-
     bool is_root_dir = (strcmp(context.tool_context->cwd, "") == 0);
     if (is_root_dir) {
         cluster_id = context.tool_context->bpb.root_cluster_id;
@@ -55,6 +55,24 @@ void creat_cmd(struct command_context context) {
         }
         cluster_id = entry->cluster_id;
         free(entry);
+    }
+
+    // Make sure the directory does not already contain a file with that name.
+    {
+        struct directory dir = read_directory(context.tool_context->bpb, cluster_id, context.tool_context->image_fd);
+
+        bool conflict = false;
+        for (int i = 0; i < dir.total_entries; i++) {
+            struct directory_entry entry = dir.entries[i];
+            if ((strcmp(entry.file_name, filename) == 0) && (strcmp(entry.extension, extension) == 0)) {
+                conflict = true;
+                break;
+            }
+        }
+        if (conflict) {
+            printf("A file with that name already exists within the current directory.\n");
+            return;
+        }
     }
 
     bool created = create_file(context.tool_context->bpb, context.tool_context->image_fd, cluster_id, filename, extension);

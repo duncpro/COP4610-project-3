@@ -10,11 +10,11 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 make: *** No rule to make target `all'.  Stop.
  
 
-# Make data base, printed on Thu Dec  2 22:52:10 2021
- 
+# Make data base, printed on Fri Dec  3 01:12:10 2021
 
 # Variables
 
+ 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
 # automatic
@@ -127,6 +127,7 @@ CODEARTIFACT_AUTH_TOKEN = eyJ2ZXIiOjEsImlzdSI6MTYzODI0NzM5NiwiZW5jIjoiQTEyOEdDTS
 +D = $(patsubst %/,%,$(dir $+))
 # automatic
 +F = $(notdir $+)
+ 
 # environment
 __CF_USER_TEXT_ENCODING = 0x1F5:0x0:0x0
 # environment
@@ -163,7 +164,6 @@ VSCODE_PID = 44931
 # 28 files, no impossibilities in 1 directories.
 
 # Implicit Rules
- 
 
 # No implicit rules.
 
@@ -186,6 +186,12 @@ all:
 
 # Not a target:
 repl.c:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+cmds/rm.c:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -222,7 +228,7 @@ fat32.c:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2021-12-02 22:51:45
+#  Last modified 2021-12-03 01:11:40
 #  File has been updated.
 #  Successfully updated.
 # variable set hash-table stats:
@@ -258,7 +264,7 @@ command.c:
 #  Modification time never checked.
 #  File has not been updated.
 
-build/fat32_tools.o: fat32.c repl.c string_utils.c main.c cmds/info.c cmds/size.c cmds/ls.c cmds/creat.c cmds/cd.c command.c dispatch.c path.c tool_context.c misc_utils.c
+build/fat32_tools.o: fat32.c repl.c string_utils.c main.c cmds/info.c cmds/size.c cmds/ls.c cmds/creat.c cmds/rm.c cmds/cd.c command.c dispatch.c path.c tool_context.c misc_utils.c
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
@@ -324,7 +330,7 @@ cmds/creat.c:
 #  File has not been updated.
 
 # files hash-table stats:
-# Load=22/1024=2%, Rehash=0, Collisions=2/50=4%
+# Load=23/1024=2%, Rehash=0, Collisions=2/52=4%
 # VPATH Search Paths
 
 # No `vpath' search paths.
@@ -336,6 +342,6 @@ cmds/creat.c:
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Thu Dec  2 22:52:10 2021
+# Finished Make data base on Fri Dec  3 01:12:10 2021
 
  
