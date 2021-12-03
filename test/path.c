@@ -58,7 +58,6 @@ void test_as_path_str() {
     assert_str_equals(expected, actual, "as_path_str");
     free(actual);
     free_path(path);
-
 }
 
 int main() {

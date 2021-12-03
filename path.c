@@ -55,10 +55,10 @@ struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path
     // Copy the absolute path into the new absolute path as the prefix.
     // The new copy is completely independent of the given absolute root in terms of memory allocation.
     new_path->total_segments = absolute_root.total_segments;
-    new_path->segments = malloc(sizeof(char*) * absolute_root.total_segments);
+    new_path->segments = (char**) malloc(sizeof(char*) * absolute_root.total_segments);
     for (int i = 0; i < absolute_root.total_segments; i++) {
         char* original_segment = absolute_root.segments[i];
-        new_path->segments[i] = malloc(sizeof(char) * (strlen(original_segment) + 1));
+        new_path->segments[i] = (char*) malloc(sizeof(char) * (strlen(original_segment) + 1));
         strcpy(new_path->segments[i], original_segment);
     }
 
@@ -66,12 +66,12 @@ struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path
         char* segment = relative_path.segments[i];
         if (strcmp(segment, ".") == 0) continue;
         if (strcmp(segment, "..") == 0) {
-            if (new_path->total_segments == 0) continue;
             new_path->total_segments--;
+            if (new_path->total_segments == 0) continue;
             free(new_path->segments[new_path->total_segments]);
             continue;
         }
-        new_path->segments = realloc(new_path->segments, sizeof(char*) * (new_path->total_segments + 1));
+        new_path->segments = (char**) realloc(new_path->segments, sizeof(char*) * (new_path->total_segments + 1));
         new_path->segments[new_path->total_segments] = (char*) malloc(sizeof(char) * (strlen(segment) + 1));
         strcpy(new_path->segments[new_path->total_segments], segment);
         new_path->total_segments++;
@@ -81,7 +81,7 @@ struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path
 }
 
 char* as_path_string(struct fat_path path) {
-    char* str = malloc(sizeof(char) * (1 /* null terminator */ + (path.total_segments * (FAT_FILENAME_LENGTH + FAT_EXTENSION_LENGTH + 1 /* slash */))));
+    char* str = (char*) malloc(sizeof(char) * (1 /* null terminator */ + (path.total_segments * (FAT_FILENAME_LENGTH + FAT_EXTENSION_LENGTH + 1 /* slash */))));
     for (int i = 0; i < path.total_segments; i++) {
         if (i != 0) strcat(str, "/");
         strcat(str, path.segments[i]);
