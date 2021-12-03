@@ -1,5 +1,6 @@
 #include "./../tool_context.h"
 #include "./../fat32.h"
+#include "./../path.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,13 +12,15 @@ void size_cmd(struct command_context context) {
     }
 
     // The absolute path of the file whose size the user is requesting.
-    char absolute_path[strlen(context.args[0]) + strlen(context.tool_context->cwd)];
-    absolute_path[0] = '\0';
-    strcat(absolute_path, context.tool_context->cwd);
-    strcat(absolute_path, context.args[0]);
+    struct fat_path* cwd_path = parse_path(context.tool_context->cwd);
+    struct fat_path* rel_path = parse_path(context.args[0]);
+    struct fat_path* abs_target_path = as_absolute_path(*rel_path, *cwd_path);
+    free_path(cwd_path);
+    free_path(rel_path);
 
-
-    struct directory_entry* entry = find_directory_entry(context.tool_context->bpb, context.tool_context->image_fd, absolute_path);
+    struct directory_entry* entry = get_entry_by_absolute_path(*abs_target_path, context.tool_context->image_fd, context.tool_context->bpb);
+    free(abs_target_path);
+    
     if (entry == NULL) {
         printf("The given absolute path does not lead to a real directory entry.\n");
         return;

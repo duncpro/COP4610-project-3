@@ -82,6 +82,7 @@ struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path
 
 char* as_path_string(struct fat_path path) {
     char* str = (char*) malloc(sizeof(char) * (1 /* null terminator */ + (path.total_segments * (FAT_FILENAME_LENGTH + FAT_EXTENSION_LENGTH + 1 /* slash */))));
+    str[0] = '\0';
     for (int i = 0; i < path.total_segments; i++) {
         if (i != 0) strcat(str, "/");
         strcat(str, path.segments[i]);

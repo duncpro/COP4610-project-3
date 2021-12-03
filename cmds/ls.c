@@ -22,24 +22,26 @@ void ls_cmd(struct command_context context) {
     if (target_dir_path->total_segments == 0) {
         cwd_cluster_id = context.tool_context->bpb.root_cluster_id;
     } else {
-        char* target_dir_path_str = as_path_string(*target_dir_path);
-        struct directory_entry* dir_entry = find_directory_entry(context.tool_context->bpb, context.tool_context->image_fd, target_dir_path_str);
-        free(target_dir_path_str);
-        
+        struct directory_entry* dir_entry = get_entry_by_absolute_path(*target_dir_path, context.tool_context->image_fd, context.tool_context->bpb);
         if (dir_entry == NULL) {
             printf("Warning: The working directory does not point to a real directory entry.\n");
             printf("The directory does not exist therefore no files exist in the current directory\n");
+            
+            free_path(target_dir_path);
             return;
         }
         if (!is_directory(*dir_entry)) {
             printf("Warning: The current path points to a file not an actual directory.\n");
             printf("Files contain no discernable subfiles therefore there are no children at the current path.y\n");
+            
             free(dir_entry);
             free_path(target_dir_path);
             return;
         }
         cwd_cluster_id = dir_entry->cluster_id;
+        
         free(dir_entry);
+        free_path(target_dir_path);
     }
     
     

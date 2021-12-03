@@ -1,6 +1,5 @@
 #include "fat32.h"
 #include "string_utils.h"
-#include "path.h"
 #include <math.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -149,6 +148,14 @@ void free_directory(struct directory dir) {
     free(dir.entries);
 }
 
+
+struct directory_entry* get_entry_by_absolute_path(struct fat_path path, int fd, struct bpb bpb) {
+    char* absolute_path_string = as_path_string(path);
+    struct directory_entry* entry = get_entry_by_absolute_path_string(bpb, fd, absolute_path_string);
+    free(absolute_path_string);
+    return entry;
+}
+
 /**
  * Returns a pointer to the directory entry which matches the given child path segment.
  * If no entry exists within the given directory which matches the given child path segment then
@@ -173,7 +180,7 @@ struct directory_entry* get_entry_by_path_segment(struct directory* parent_dir, 
  * then a NULL pointer is returned instead. If this path points to the root directory, then of course no directory
  * entry exists for the root directory and this function will return null.
  */
-struct directory_entry* find_directory_entry(struct bpb bpb, int image_fd, char* path_str) {
+struct directory_entry* get_entry_by_absolute_path_string(struct bpb bpb, int image_fd, char* path_str) {
     struct fat_path* path = parse_path(path_str);
 
     struct directory parent_dir = read_directory(bpb, bpb.root_cluster_id, image_fd);

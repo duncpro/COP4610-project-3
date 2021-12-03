@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "path.h"
 
 // Low level utilities
 
@@ -106,13 +107,13 @@ struct directory {
     struct directory_entry* entries;
 };
 
-
 /**
  * Returns a directory struct containing all the files in the given directory.
  */
 struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd);
 
-struct directory_entry* find_directory_entry(struct bpb bpb, int image_fd, char* path_str);
+struct directory_entry* get_entry_by_absolute_path_string(struct bpb bpb, int image_fd, char* path_str);
+struct directory_entry* get_entry_by_absolute_path(struct fat_path path, int fd, struct bpb bpb);
 
 void free_directory(struct directory directory);
 
