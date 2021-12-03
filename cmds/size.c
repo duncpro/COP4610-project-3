@@ -11,16 +11,11 @@ void size_cmd(struct command_context context) {
         return;
     }
 
-    // The absolute path of the file whose size the user is requesting.
-    struct fat_path* cwd_path = parse_path(context.tool_context->cwd);
-    struct fat_path* rel_path = parse_path(context.args[0]);
-    struct fat_path* abs_target_path = as_absolute_path(*rel_path, *cwd_path);
-    free_path(cwd_path);
-    free_path(rel_path);
+    struct fat_path* abs_target_path = create_absolute_path_from_strs(context.args[0], context.tool_context->cwd);
 
     struct directory_entry* entry = get_entry_by_absolute_path(*abs_target_path, context.tool_context->image_fd, context.tool_context->bpb);
     free(abs_target_path);
-    
+
     if (entry == NULL) {
         printf("The given absolute path does not lead to a real directory entry.\n");
         return;

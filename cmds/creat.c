@@ -11,6 +11,36 @@ void creat_cmd(struct command_context context) {
         return;
     }
 
+    char filename[FILENAME_MAX + 1];
+    filename[0] = '\0';
+    char extension[FAT_EXTENSION_LENGTH + 1];
+    extension[0] = '\0';
+    int part = 0;
+    for (int i = 0; i < strlen(context.args[0]); i++) {
+        if (context.args[0][i] == '.') {
+            part = 1;
+            continue;
+        }
+        if (part == 0) {
+            filename[strlen(filename)] = context.args[0][i];
+            filename[strlen(filename)] = '\0';
+            if (strlen(filename) > FAT_FILENAME_LENGTH) {
+                printf("Unsupported Filename Length: FAT filesystem names may be up to a maximum of 8 characters long.\n");
+                return;
+            }
+        }
+        if (part == 1) {
+            extension[strlen(extension)] = context.args[0][i];
+            extension[strlen(extension)] = '\0';
+
+            if (strlen(extension) > FAT_EXTENSION_LENGTH) {
+                printf("Unsupported Extension Length: FAT filesystem extensions may be up to a maximum of three characters long.\n");
+                return;
+            }
+        }
+    }
+
+
     uint32_t cluster_id;
 
     bool is_root_dir = (strcmp(context.tool_context->cwd, "") == 0);
@@ -27,7 +57,11 @@ void creat_cmd(struct command_context context) {
         free(entry);
     }
 
+    bool created = create_file(context.tool_context->bpb, context.tool_context->image_fd, cluster_id, filename, extension);
 
-    create_file(context.tool_context->bpb, context.tool_context->image_fd, cluster_id, context.args[0], "");
-    printf("Created new file: %s\n", context.args[0]);
+    if (created) {
+        printf("Created new file: \"%s\" in current working directory.\n", context.args[0]);
+    } else {
+        printf("Failed to create new file.\n");
+    }
 }

@@ -120,7 +120,13 @@ struct cluster_list scan_fat_by_cluster(struct bpb bpb, uint32_t initial_cluster
 bool is_directory_terminator(int image_fd, unsigned int entry_pos) {
     uint8_t byte[1];
     int prefix = pread(image_fd, byte, 4, entry_pos);
-    return byte[0] == 0x00 || byte[0] == 0xE5 || byte[0] == 0x02;
+    return byte[0] == 0x00;
+}
+
+bool is_free_directory(int image_fd, unsigned int entry_pos) {
+    uint8_t byte[1];
+    int prefix = pread(image_fd, byte, 4, entry_pos);
+    return byte[0] == 0xE5;
 }
 
 uint8_t read_byte(int image_fd, uint32_t address) {
@@ -144,8 +150,7 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
         unsigned int dir_sector_pos = (find_leading_sector_for_cluster(bpb, initial_dir_cluster_id) * bpb.bytes_per_sector);
         unsigned int offset = 0;
         while (!is_directory_terminator(image_fd, dir_sector_pos + offset) && offset < (bpb.bytes_per_sector * bpb.sectors_per_cluster)) {
-
-            if (!is_long_dir_name(image_fd, dir_sector_pos + offset)) {
+            if (!is_long_dir_name(image_fd, dir_sector_pos + offset) && !is_free_directory(image_fd, (dir_sector_pos + offset))) {
                 dir.entries = (struct directory_entry*) realloc(dir.entries, sizeof(struct directory_entry) * (dir.total_entries + 1));
                 struct directory_entry new_entry;
 
@@ -167,6 +172,8 @@ struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster
                     read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 20, 2),
                     read_unisgned_little_endian_int(image_fd, dir_sector_pos + offset + 26, 2)
                 );
+                
+                new_entry.entry_byte_position = (dir_sector_pos + offset);
 
                 dir.entries[dir.total_entries] = new_entry;
                 dir.total_entries++;
@@ -258,7 +265,7 @@ bool expand_file(struct bpb bpb, int image_fd, uint32_t parent_cluster_id) {
     return true;
 }
 
-void create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, char* filename, char* extension) {
+bool create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, char* filename, char* extension) {
     // The byte position, in the image file, of the first free directory entry spot. 
     uint32_t first_free_entry_byte_address = 0;
     struct cluster_list cluster_list = scan_fat_by_cluster(bpb, initial_dir_cluster_id, image_fd);
@@ -268,7 +275,7 @@ void create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, 
         struct directory dir = read_directory(bpb, dir_cluster_id, image_fd);
         for (int dir_entry_id = dir.total_entries; dir_entry_id < max_dir_entries_per_cluster(bpb); dir_entry_id++) {
             uint32_t dir_byte_pos = (bpb.bytes_per_sector * find_leading_sector_for_cluster(bpb, dir_cluster_id)) + (dir_entry_id * 32);
-            if (is_directory_terminator(image_fd, dir_byte_pos)) {
+            if (is_free_directory(image_fd, dir_byte_pos) || is_directory_terminator(image_fd, dir_byte_pos)) {
                 first_free_entry_byte_address = dir_byte_pos;
                 goto cluster_scan_over;
             }
@@ -277,7 +284,7 @@ void create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, 
 
     cluster_scan_over:
 
-    // Allocate a new cluster if necessary.
+    // Allocate a new cluster for the directory if necessary.
     if (first_free_entry_byte_address == 0) {
         uint32_t current_last_cluster_id = cluster_list.cluster_ids[cluster_list.total_clusters - 1];
         expand_file(bpb, image_fd, current_last_cluster_id);
@@ -285,10 +292,46 @@ void create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, 
         first_free_entry_byte_address = find_leading_sector_for_cluster(bpb, new_cluster_id);
     }
 
+    // Allocate a new cluster to hold the file's contents.
+    uint32_t file_contents_cluster_id = first_unallocated_cluster_id(image_fd, bpb);
+    if (file_contents_cluster_id == 0) return false;
+    write_unisgned_little_endian_int(image_fd, fat_entry_position(file_contents_cluster_id, bpb), 0xFFFFFFFF, 4);
+
 
     // Finally write the directory entry.
     pwrite(image_fd, filename, lowest_of(FAT_FILENAME_LENGTH, strlen(filename)), first_free_entry_byte_address);
     pwrite(image_fd, extension, lowest_of(FAT_EXTENSION_LENGTH, strlen(extension)), first_free_entry_byte_address + 8);
-    write_unisgned_little_endian_int(image_fd, first_free_entry_byte_address + 28, 0, 4);
-    fsync(image_fd);
+    write_unisgned_little_endian_int(image_fd, first_free_entry_byte_address + 28, 0, 4);     // Size: zero bytes
+    
+    uint8_t bytes[4];
+    create_unsigned_little_endian_int(file_contents_cluster_id, bytes);
+    pwrite(image_fd, bytes, 2, first_free_entry_byte_address + 26); // Low word
+    pwrite(image_fd, bytes + (sizeof(uint8_t) * 2), 2, first_free_entry_byte_address + 20); // High word
+    return true;
+}
+
+void delete_file(struct bpb bpb, int image_fd, struct directory_entry entry) {
+    struct cluster_list cluster_list = scan_fat_by_cluster(bpb, entry.cluster_id, image_fd);
+
+    // Zero out all the clusters which were associated with this file.
+    for (int i = 0; i < cluster_list.total_clusters; i++) {
+        uint32_t cluster_id = cluster_list.cluster_ids[i];
+        uint32_t data_address = find_leading_sector_for_cluster(bpb, cluster_id) * bpb.bytes_per_sector * bpb.sectors_per_cluster;
+        uint32_t cluster_length /* bytes */ = bpb.bytes_per_sector * bpb.sectors_per_cluster;
+        for (uint32_t b = 0; b < cluster_length; b++) {
+            uint32_t byte_address = data_address + b;
+            write_unisgned_little_endian_int(0, byte_address, 0, 1);
+        }
+    }
+
+    // Remove all the FAT entries.
+    for (int i = 0; i < cluster_list.total_clusters; i++) {
+        uint32_t cluster_id = cluster_list.cluster_ids[i];
+        write_unisgned_little_endian_int(image_fd, fat_entry_position(cluster_id, bpb), 0, 4);
+    }
+
+    // Finally remove the directory entry.
+    for (int i = 0; i < FAT_DIRECTORY_ENTRY_LENGTH; i++) {
+        write_unisgned_little_endian_int(image_fd, entry.entry_byte_position + i, 0, 1);
+    }
 }

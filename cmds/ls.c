@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 void ls_cmd(struct command_context context) {
     uint32_t cwd_cluster_id;
@@ -46,11 +47,13 @@ void ls_cmd(struct command_context context) {
     
     
     struct directory dir = read_directory(context.tool_context->bpb, cwd_cluster_id, context.tool_context->image_fd);
-    printf("total entries: %i\n", dir.total_entries);
     for (int i = 0; i < dir.total_entries; i++) {
         struct directory_entry entry = dir.entries[i];
-        printf("%s%s\n", entry.file_name, is_directory(entry) ? " (d)" : entry.extension);
+        printf("%s", entry.file_name);
+        if (!is_directory(entry) && strlen(entry.extension) > 0) {
+            printf(".%s", entry.extension);
+        }
+        printf("\n");
     }
-    printf("(d) signifies a sub-directory in the current directory, not a file.\n");
     free_directory(dir);
 }

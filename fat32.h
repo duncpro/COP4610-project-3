@@ -69,13 +69,11 @@ struct cluster_list {
 unsigned int calc_entry_chain_length(struct bpb bpb, unsigned int initial_entry, int image_fd);
 
 /**
- * Traverses the FAT, finding all clusters associated with the FAT entry at the given byte position.
+ * Traverses the FAT, finding all clusters associated with the given initial cluster id.
  * The returned list is ordered logically. In other words, by reading the contents of each cluster
  * in the same order in which they appear in the list, a fully intact file can be produced.
  * In general, scan_fat_by_cluster should be used instead of this function.
  */
-struct cluster_list scan_fat(struct bpb bpb, unsigned int initial_entry, int image_fd);
-
 struct cluster_list scan_fat_by_cluster(struct bpb bpb, uint32_t cluster_id, int image_fd);
 
 /**
@@ -95,22 +93,28 @@ void free_cluster_list(struct cluster_list cluster_list);
  */
 #define FAT_EXTENSION_LENGTH 3
 
+#define FAT_DIRECTORY_ENTRY_LENGTH 32
+
 struct directory_entry {
     char file_name[FAT_FILENAME_LENGTH + 1];
     char extension[FAT_EXTENSION_LENGTH + 1];
     unsigned int file_size;
     unsigned char attributes;
     uint32_t cluster_id;
+    uint32_t entry_byte_position;
 };
 
 bool is_directory(struct directory_entry);
+
+
+bool create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, char* filename, char* extension);
+
+void delete_file(struct bpb bpb, int image_fd, struct directory_entry directory_entry);
 
 struct directory {
     int total_entries;
     struct directory_entry* entries;
 };
-
-void create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, char* filename, char* extension);
 
 /**
  * Returns a directory struct containing all the files in the given directory.
