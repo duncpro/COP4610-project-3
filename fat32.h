@@ -69,11 +69,14 @@ struct cluster_list {
 unsigned int calc_entry_chain_length(struct bpb bpb, unsigned int initial_entry, int image_fd);
 
 /**
- * Traverses the FAT, finding all clusters downstream from the given cluster.
+ * Traverses the FAT, finding all clusters associated with the FAT entry at the given byte position.
  * The returned list is ordered logically. In other words, by reading the contents of each cluster
  * in the same order in which they appear in the list, a fully intact file can be produced.
+ * In general, scan_fat_by_cluster should be used instead of this function.
  */
 struct cluster_list scan_fat(struct bpb bpb, unsigned int initial_entry, int image_fd);
+
+struct cluster_list scan_fat_by_cluster(struct bpb bpb, uint32_t cluster_id, int image_fd);
 
 /**
  * Companion to scan_fat which deallocated all the dynamically allocated memory within the returned cluster list.
@@ -107,6 +110,8 @@ struct directory {
     struct directory_entry* entries;
 };
 
+void create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, char* filename, char* extension);
+
 /**
  * Returns a directory struct containing all the files in the given directory.
  */
@@ -119,5 +124,6 @@ void free_directory(struct directory directory);
 
 // low-level utilities
 
-int ith_bit(unsigned char byte, unsigned int i);
+int ith_bit(uint32_t value, unsigned int i);
+void create_unsigned_little_endian_int(uint32_t value, uint8_t bytes[4]);
 #endif

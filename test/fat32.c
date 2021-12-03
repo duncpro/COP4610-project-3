@@ -2,6 +2,7 @@
 #include "./fat32_test_tools.c"
 #include "./../string_utils.c"
 #include "./../path.c"
+#include "./../misc_utils.c"
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -43,11 +44,21 @@ void test_ith_bit() {
     assert_true(first_bit_correct && second_bit_correct, "ith_bit");
 }
 
+void test_create_unsigned_little_endian_int() {
+    uint8_t bytes[4];
+    create_unsigned_little_endian_int(257, bytes);
+    assert_int_equals(1, bytes[0], "create_unsigned_little_endian_int (1)");
+    assert_int_equals(1, bytes[1], "create_unsigned_little_endian_int (2)");
+    assert_int_equals(0, bytes[2], "create_unsigned_little_endian_int (3)");
+    assert_int_equals(0, bytes[3], "create_unsigned_little_endian_int (4)");
+}
+
 int main() {
     test_little_endian_int_general_case();
     test_little_endian_int_single_case();
     test_read_bpb();
     test_ith_bit();
     test_combine_ints();
+    test_create_unsigned_little_endian_int();
     return 0;
 }

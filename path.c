@@ -80,6 +80,15 @@ struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path
     return new_path;
 }
 
+struct fat_path* create_absolute_path_from_strs(char* relative, char* absolute_root) {
+    struct fat_path* absolute_root_path = parse_path(absolute_root);
+    struct fat_path* rel_path = parse_path(relative);
+    struct fat_path* abs_target_path = as_absolute_path(*rel_path, *absolute_root_path);
+    free_path(absolute_root_path);
+    free_path(rel_path);
+    return abs_target_path;
+} 
+
 char* as_path_string(struct fat_path path) {
     char* str = (char*) malloc(sizeof(char) * (1 /* null terminator */ + (path.total_segments * (FAT_FILENAME_LENGTH + FAT_EXTENSION_LENGTH + 1 /* slash */))));
     str[0] = '\0';

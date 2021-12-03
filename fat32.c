@@ -1,13 +1,14 @@
 #include "fat32.h"
 #include "string_utils.h"
+#include "misc_utils.h"
 #include <math.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-int ith_bit(unsigned char byte, unsigned int i) {
-    return (byte >> i) & 1;
+int ith_bit(uint32_t val, unsigned int i) {
+    return (val >> i) & 1;
 }
 
 uint32_t combine_ints(uint16_t high, uint16_t low) {
@@ -23,6 +24,18 @@ uint32_t little_endian_unsigned_int(uint8_t* bytes, int length) {
         sum += (((uint32_t) bytes[i]) << (i * 8));
     }
     return sum;
+}
+
+void create_unsigned_little_endian_int(uint32_t value, uint8_t bytes[4]) {
+    for (int b = 3; b >= 0; b--) {
+        bytes[b] = (value >> (8 * b));
+    }
+}
+
+void write_unisgned_little_endian_int(int fd, uint32_t address, uint32_t value, int length) {
+    uint8_t bytes[4];
+    create_unsigned_little_endian_int(value, bytes);
+    pwrite(fd, bytes, length, address);
 }
 
 uint32_t read_unisgned_little_endian_int(int fd, uint32_t address, uint8_t field_length) {
@@ -60,20 +73,42 @@ unsigned int find_leading_sector_for_cluster(struct bpb bpb, unsigned int cluste
     return ((cluster_id - bpb.root_cluster_id) * bpb.sectors_per_cluster) + find_initial_data_sector(bpb);
 }
 
-unsigned int next_cluster_id(unsigned int current_cluster_id, int image_fd, struct bpb bpb) {
-    unsigned int fat_start_sector_id = bpb.total_reserved_sectors + (8 / bpb.bytes_per_sector);
+uint32_t fat_entry_position(uint32_t cluster_id, struct bpb bpb) {
+    unsigned int fat_start_sector_id = bpb.total_reserved_sectors + (8 /* two entries */ / bpb.bytes_per_sector);
     unsigned int fat_start = (fat_start_sector_id * bpb.bytes_per_sector); /* bytes */;
-    unsigned int entry_position = fat_start + (current_cluster_id * 4);
+    unsigned int entry_position = fat_start + (cluster_id * 4);
+    return entry_position;
+}
+
+unsigned int next_cluster_id(unsigned int current_cluster_id, int image_fd, struct bpb bpb) {
+    uint32_t entry_position = fat_entry_position(current_cluster_id, bpb);
     return read_unisgned_little_endian_int(image_fd, entry_position, 4);
 }
 
-struct cluster_list scan_fat(struct bpb bpb, unsigned int start_at_cluster_id, int image_fd) {
+uint32_t max_cluster_id(struct bpb bpb) {
+    return (find_initial_data_sector(bpb) / bpb.sectors_per_cluster) + 1;
+}
+
+/**
+ * Returns the cluster id of the first unallocated cluster within the FAT.
+ * If the FAT is full then zero is returned.
+ */
+uint32_t first_unallocated_cluster_id(int image_fd, struct bpb bpb) {
+    for (uint32_t cluster_id = bpb.root_cluster_id; cluster_id < max_cluster_id(bpb); cluster_id++) {
+        if (next_cluster_id(cluster_id, image_fd, bpb) == 0x0000000) {
+            return cluster_id;
+        }
+    }
+    return 0;
+}
+
+struct cluster_list scan_fat_by_cluster(struct bpb bpb, uint32_t initial_cluster_id, int image_fd) {
     struct cluster_list cluster_list = {
         .total_clusters = 0,
         .cluster_ids = NULL
     };
-    unsigned int cluster_id = start_at_cluster_id;
-    while (cluster_id > 0x0000002 && cluster_id < 0xFFFFFF6) {
+    unsigned int cluster_id = initial_cluster_id;
+    while (cluster_id >= 0x0000002 && cluster_id < 0xFFFFFF6) {
         cluster_list.cluster_ids = (unsigned int*) realloc(cluster_list.cluster_ids, sizeof(unsigned int) * (cluster_list.total_clusters + 1));
         cluster_list.cluster_ids[cluster_list.total_clusters] = cluster_id;
         cluster_list.total_clusters++;
@@ -84,7 +119,7 @@ struct cluster_list scan_fat(struct bpb bpb, unsigned int start_at_cluster_id, i
 
 bool is_directory_terminator(int image_fd, unsigned int entry_pos) {
     uint8_t byte[1];
-    int prefix = pread(image_fd, byte, 1, entry_pos);
+    int prefix = pread(image_fd, byte, 4, entry_pos);
     return byte[0] == 0x00 || byte[0] == 0xE5 || byte[0] == 0x02;
 }
 
@@ -99,12 +134,12 @@ bool is_long_dir_name(int image_fd, unsigned int entry_pos) {
 }
 
 struct directory read_directory(struct bpb bpb, unsigned int initial_dir_cluster_id, int image_fd) {
-    struct directory dir = {
+    struct directory dir = { 
         .total_entries = 0,
         .entries = NULL
     };
 
-    struct cluster_list cluster_list = scan_fat(bpb, find_leading_sector_for_cluster(bpb, initial_dir_cluster_id), image_fd);
+    struct cluster_list cluster_list = scan_fat_by_cluster(bpb, initial_dir_cluster_id, image_fd);
     for (int i = 0; i < cluster_list.total_clusters; i++) {
         unsigned int dir_sector_pos = (find_leading_sector_for_cluster(bpb, initial_dir_cluster_id) * bpb.bytes_per_sector);
         unsigned int offset = 0;
@@ -202,4 +237,58 @@ struct directory_entry* get_entry_by_absolute_path_string(struct bpb bpb, int im
     }
 
     return NULL;
+}
+
+uint32_t max_dir_entries_per_cluster(struct bpb bpb) {
+    return (bpb.sectors_per_cluster * bpb.bytes_per_sector) / 32;
+}
+
+/**
+ * Expands the given file by creating a new cluster.
+ * The new cluster's ID can be found using next_cluster_id(parent_cluster_id) after invocation of this method.
+ * The parent_cluster_id should be the last cluster within the cluster chain for a given file.
+ * Returns true if the cluster was successfully allocated, otherwise returns false.
+ */ 
+bool expand_file(struct bpb bpb, int image_fd, uint32_t parent_cluster_id) {
+    uint32_t free_cluster_id = first_unallocated_cluster_id(image_fd, bpb);
+    if (free_cluster_id == 0) return false;
+    uint32_t entry_position = fat_entry_position(parent_cluster_id, bpb);
+    write_unisgned_little_endian_int(image_fd, fat_entry_position(parent_cluster_id, bpb), free_cluster_id, 4);
+    write_unisgned_little_endian_int(image_fd, fat_entry_position(free_cluster_id, bpb), 0xFFFFFFFF, 4);
+    return true;
+}
+
+void create_file(struct bpb bpb, int image_fd, uint32_t initial_dir_cluster_id, char* filename, char* extension) {
+    // The byte position, in the image file, of the first free directory entry spot. 
+    uint32_t first_free_entry_byte_address = 0;
+    struct cluster_list cluster_list = scan_fat_by_cluster(bpb, initial_dir_cluster_id, image_fd);
+    
+    for (uint32_t cluster_index = 0; cluster_index < cluster_list.total_clusters; cluster_index++) {
+        uint32_t dir_cluster_id = cluster_list.cluster_ids[cluster_index];
+        struct directory dir = read_directory(bpb, dir_cluster_id, image_fd);
+        for (int dir_entry_id = dir.total_entries; dir_entry_id < max_dir_entries_per_cluster(bpb); dir_entry_id++) {
+            uint32_t dir_byte_pos = (bpb.bytes_per_sector * find_leading_sector_for_cluster(bpb, dir_cluster_id)) + (dir_entry_id * 32);
+            if (is_directory_terminator(image_fd, dir_byte_pos)) {
+                first_free_entry_byte_address = dir_byte_pos;
+                goto cluster_scan_over;
+            }
+        }
+    }
+
+    cluster_scan_over:
+
+    // Allocate a new cluster if necessary.
+    if (first_free_entry_byte_address == 0) {
+        uint32_t current_last_cluster_id = cluster_list.cluster_ids[cluster_list.total_clusters - 1];
+        expand_file(bpb, image_fd, current_last_cluster_id);
+        uint32_t new_cluster_id = read_unisgned_little_endian_int(image_fd, fat_entry_position(current_last_cluster_id, bpb), 4);
+        first_free_entry_byte_address = find_leading_sector_for_cluster(bpb, new_cluster_id);
+    }
+
+
+    // Finally write the directory entry.
+    pwrite(image_fd, filename, lowest_of(FAT_FILENAME_LENGTH, strlen(filename)), first_free_entry_byte_address);
+    pwrite(image_fd, extension, lowest_of(FAT_EXTENSION_LENGTH, strlen(extension)), first_free_entry_byte_address + 8);
+    write_unisgned_little_endian_int(image_fd, first_free_entry_byte_address + 28, 0, 4);
+    fsync(image_fd);
 }

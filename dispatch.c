@@ -7,6 +7,7 @@
 #include "cmds/size.c"
 #include "cmds/ls.c"
 #include "cmds/cd.c"
+#include "cmds/creat.c"
 
 int dispatch(struct command cmd, struct tool_context* tool_context) {
     if (action(cmd) == NULL) return REPL_STATUS_CONTINUE;
@@ -34,6 +35,11 @@ int dispatch(struct command cmd, struct tool_context* tool_context) {
     }
     if (strcmp(action(cmd), "cd") == 0) {
         cd_cmd(context);
+        return REPL_STATUS_CONTINUE;
+    }
+
+    if (strcmp(action(cmd), "creat") == 0) {
+        creat_cmd(context);
         return REPL_STATUS_CONTINUE;
     }
     

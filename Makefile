@@ -1,6 +1,6 @@
-build/fat32_tools.o: fat32.c repl.c string_utils.c main.c cmds/info.c cmds/size.c cmds/ls.c cmds/cd.c command.c dispatch.c path.c tool_context.c
+build/fat32_tools.o: fat32.c repl.c string_utils.c main.c cmds/info.c cmds/size.c cmds/ls.c cmds/creat.c cmds/cd.c command.c dispatch.c path.c tool_context.c misc_utils.c
 	mkdir -p build
-	cc -g -o ./build/fat32_tools.o fat32.c repl.c string_utils.c main.c command.c dispatch.c path.c tool_context.c
+	cc -std=c99 -g -o ./build/fat32_tools.o fat32.c repl.c string_utils.c main.c command.c dispatch.c path.c tool_context.c misc_utils.c
 
 test:
 	mkdir -p build

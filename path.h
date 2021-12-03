@@ -28,6 +28,8 @@ struct fat_path* parse_path(char* str);
  */ 
 struct fat_path* as_absolute_path(struct fat_path relative_path, struct fat_path absolute_root);
 
+struct fat_path* create_absolute_path_from_strs(char* relative, char* absolute_root);
+
 /**
  * Allocates a string containing the string representation of the given fat_path struct.
  * The caller should free the returned string when finished.
